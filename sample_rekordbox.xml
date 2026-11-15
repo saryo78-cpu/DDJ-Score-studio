@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DJ_PLAYLISTS Version="1.0.0">
+  <PRODUCT Name="rekordbox" Version="6.8.5" Company="AlphaTheta" />
+  <COLLECTION Entries="2">
+    <TRACK TrackID="101" Name="Starlight Anthem" Artist="Nova Pulse" AverageBpm="128.00" Tonality="8A" TotalTime="210">
+      <TEMPO Inizio="0.050" Bpm="128.00" Metro="4/4" />
+      <POSITION_MARK Name="Intro" Type="0" Start="0.050" Num="1" />
+      <POSITION_MARK Name="Drop 1" Type="0" Start="30.050" Num="2" />
+      <POSITION_MARK Name="Outro" Type="0" Start="150.050" Num="3" />
+      <PHRASE Kind="Intro" Start="1" Bars="16" />
+      <PHRASE Kind="Up" Start="17" Bars="16" />
+      <PHRASE Kind="Drop" Start="33" Bars="32" />
+      <PHRASE Kind="Outro" Start="65" Bars="16" />
+    </TRACK>
+    <TRACK TrackID="102" Name="Midnight Velocity" Artist="Cyber Mirage" AverageBpm="128.00" Tonality="8A" TotalTime="225">
+      <TEMPO Inizio="0.080" Bpm="128.00" Metro="4/4" />
+      <POSITION_MARK Name="Intro Cue" Type="0" Start="0.080" Num="1" />
+      <POSITION_MARK Name="Main Drop" Type="0" Start="60.080" Num="2" />
+      <PHRASE Kind="Intro" Start="1" Bars="16" />
+      <PHRASE Kind="Drop" Start="17" Bars="32" />
+    </TRACK>
+  </COLLECTION>
+</DJ_PLAYLISTS>
+
