@@ -8,6 +8,7 @@ import urllib.parse
 import re
 import yt_dlp
 from parse_rekordbox import parse_rekordbox_xml, resolve_xml_path, generate_llm_prompt
+from analyze_structure import analyze_pcm_structure
 
 PORT = 8000
 DOWNLOAD_DIR = r"G:\マイドライブ\音楽"
@@ -213,6 +214,41 @@ class DJAppHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_header('Content-Type', 'application/json; charset=utf-8')
                 self.end_headers()
                 self.wfile.write(json.dumps({"success": False, "error": str(e)}, ensure_ascii=False).encode('utf-8'))
+            return
+
+        # API: Python MIR 音響構造解析 (STFT + Cosine SSM + Foote Novelty)
+        if parsed.path == '/api/analyze-structure':
+            content_len = int(self.headers.get('Content-Length', 0))
+            post_body = self.rfile.read(content_len)
+            try:
+                qs = urllib.parse.parse_qs(parsed.query)
+                sr = int(qs.get('sr', ['11025'])[0])
+                bpm = float(qs.get('bpm', ['128.0'])[0])
+                first_downbeat = float(qs.get('firstDownbeat', ['0.0'])[0])
+                duration = float(qs.get('duration', ['0.0'])[0])
+                cues_raw = qs.get('cues', [''])[0]
+                cue_secs = [float(x) for x in cues_raw.split(',') if x.strip()] if cues_raw else []
+
+                result = analyze_pcm_structure(
+                    post_body,
+                    sr=sr,
+                    bpm=bpm,
+                    first_downbeat=first_downbeat,
+                    duration=duration,
+                    cue_secs=cue_secs,
+                )
+                result["success"] = True
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(json.dumps(result, ensure_ascii=False).encode('utf-8'))
+            except Exception as e:
+                print(f"[SERVER ERROR] analyze-structure: {e}", file=sys.stderr)
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": False, "error": str(e)}, ensure_ascii=False).encode('utf-8'))
+            return
             return
 
         self.send_response(404)

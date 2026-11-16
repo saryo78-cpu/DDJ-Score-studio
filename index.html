@@ -418,6 +418,71 @@
           </select>
         </div>
 
+        <!-- シンプル2曲並走スタジオ（評点抜きでまず両方ずっと流す） -->
+        <div id="simple-parallel-studio" class="bg-emerald-950/25 border border-emerald-500/40 rounded-lg p-2.5 flex flex-col gap-2">
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-[11px] font-bold text-emerald-300">🔁 シンプル2曲並走スタジオ（まず両方流す）</span>
+            <div class="flex items-center gap-1">
+              <button onclick="rankParallelPositions(true)" class="text-[10px] px-2 py-0.5 rounded bg-teal-600/80 hover:bg-teal-500 text-white font-bold cursor-pointer transition" title="現在の並走設定で、一番相性の良い D1×D2 の開始位置(どこで)を評点ランキング">
+                📍 どこで検索
+              </button>
+              <button onclick="applySimpleParallelMix(true)" class="text-[10px] px-2.5 py-0.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold cursor-pointer transition">
+                ▶ 並走試聴
+              </button>
+              <button onclick="stopPerformance()" class="text-[10px] px-2 py-0.5 rounded bg-red-600/80 hover:bg-red-500 text-white font-bold cursor-pointer transition">
+                ■ 停止
+              </button>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[10px]">
+            <label class="flex flex-col gap-0.5 text-slate-300">
+              <span class="text-[9px] text-slate-400">並走の長さ</span>
+              <select id="par-span-beats" onchange="applySimpleParallelMix(false)" class="bg-inset border border-[#252f45] rounded px-1.5 py-1 text-slate-200 outline-none cursor-pointer">
+                <option value="32">32拍 (8小節)</option>
+                <option value="64" selected>64拍 (16小節)</option>
+                <option value="96">96拍 (24小節)</option>
+                <option value="128">128拍 (32小節)</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-0.5 text-slate-300">
+              <span class="text-[9px] text-slate-400">D2のループ並走</span>
+              <select id="par-d2-loop" onchange="applySimpleParallelMix(false)" class="bg-inset border border-[#252f45] rounded px-1.5 py-1 text-slate-200 outline-none cursor-pointer">
+                <option value="0">なし (そのまま流す)</option>
+                <option value="8">8拍ループ並走→後半解除</option>
+                <option value="16">16拍ループ並走→後半解除</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-0.5 text-slate-300">
+              <span class="text-[9px] text-slate-400">LOW (低音) の主役</span>
+              <select id="par-low-mode" onchange="applySimpleParallelMix(false)" class="bg-inset border border-[#252f45] rounded px-1.5 py-1 text-slate-200 outline-none cursor-pointer">
+                <option value="swap" selected>途中で入替 (Bass Swap)</option>
+                <option value="d1">ずっとD1のLOW</option>
+                <option value="d2">ずっとD2のLOW</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-0.5 text-slate-300">
+              <span class="text-[9px] text-slate-400">MID (中音) の扱い</span>
+              <select id="par-mid-mode" onchange="applySimpleParallelMix(false)" class="bg-inset border border-[#252f45] rounded px-1.5 py-1 text-slate-200 outline-none cursor-pointer">
+                <option value="both" selected>両方そのまま流す</option>
+                <option value="tuck1">D1を少し引く (0.75)</option>
+                <option value="tuck2">D2を少し引く (0.75)</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-0.5 text-slate-300 col-span-2 sm:col-span-2">
+              <span class="text-[9px] text-slate-400">並走後のD1の最後</span>
+              <select id="par-d1-end" onchange="applySimpleParallelMix(false)" class="bg-inset border border-[#252f45] rounded px-1.5 py-1 text-slate-200 outline-none cursor-pointer">
+                <option value="stay">ずっと両方残す (フェードなし)</option>
+                <option value="fade" selected>後半ゆっくりフェードアウト</option>
+                <option value="echo">Echo＋HPFで溶かす</option>
+              </select>
+            </label>
+          </div>
+          <div id="parallel-studio-summary" class="text-[9px] font-mono-num text-emerald-200/90 leading-snug">
+            上のStory Mapで D1(OUT) と D2(IN) を選ぶか「▶ 並走試聴」を押すと、Beat 1から2曲を同時再生します。
+          </div>
+          <div id="parallel-spot-list" class="flex flex-col gap-1"></div>
+        </div>
+
         <!-- Auto-Mix Smart Generator & Comparison Plans -->
         <div class="bg-sky-950/25 border border-sky-500/30 rounded-lg p-2.5 flex flex-col gap-2">
           <div class="flex items-center justify-between gap-1">
@@ -425,9 +490,12 @@
               <i data-lucide="git-compare" class="w-3.5 h-3.5"></i> <span data-i18n="automix_title">つなぎ候補の比較マトリックス</span>
               <span id="candidate-count-badge" class="text-[9px] font-mono-num px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300">0件</span>
             </span>
-            <div class="flex items-center gap-1">
+            <div class="flex items-center gap-1 flex-wrap justify-end">
               <button onclick="buildTransitionCandidates()" class="text-[10px] px-2 py-0.5 rounded bg-sky-600 hover:bg-sky-500 text-white font-bold cursor-pointer transition">
                 全パターン生成
+              </button>
+              <button id="puzzle-toggle-btn" onclick="togglePuzzleEditor()" class="text-[10px] px-2 py-0.5 rounded bg-fuchsia-600/30 hover:bg-fuchsia-600/50 border border-fuchsia-400/50 text-fuchsia-200 font-bold cursor-pointer transition" title="選択中プランを2段タイムライン・パズルで微調整＆リアルタイム採点">
+                🧩 パズル編集
               </button>
               <button onclick="copyDjScoreMarkdown()" class="text-[10px] px-2 py-0.5 rounded bg-amber-600/20 hover:bg-amber-600/40 border border-amber-500/40 text-amber-300 font-bold cursor-pointer transition" title="選択中プランをDJ楽譜(Markdown)＋検算チェックリストとしてコピー">
                 楽譜MDコピー
@@ -438,11 +506,23 @@
             </div>
           </div>
 
+          <!-- 3軸評価方針切替 -->
+          <div class="flex items-center justify-between gap-2 bg-indigo-950/30 border border-indigo-500/30 rounded px-2 py-1 text-[10px]">
+            <span class="font-bold text-indigo-300 shrink-0">🎯 評点方針</span>
+            <select id="scoring-policy-select" onchange="if(deckAnalysis[1]&&deckAnalysis[2]) buildTransitionCandidates()" class="flex-1 bg-inset border border-indigo-500/40 text-indigo-100 text-[10px] font-bold rounded px-2 py-0.5 outline-none cursor-pointer">
+              <option value="auto">🎯 自動（8シーン別最適採点）</option>
+              <option value="coexist">🤝 共存ロング重視（D1 Drop流し切り厳守・MID共存）</option>
+              <option value="drop_swap">⚡ ビルド→ドロップ切替OK（Fakeout / Drop Swap評価）</option>
+              <option value="echo_break">🌊 ブレイク／余韻つなぎ重視（FX・空間引き継ぎ）</option>
+            </select>
+          </div>
+
           <!-- Matrix Filters (D1 Exit x D2 Entry x Method) -->
           <div class="grid grid-cols-3 gap-1">
             <select id="filter-d1-exit" onchange="renderTransitionCandidates()" class="bg-inset border border-[#252f45] text-slate-300 text-[10px] rounded px-1.5 py-1 outline-none cursor-pointer">
               <option value="ALL">D1抜: すべて</option>
               <option value="DROP">D1抜: DROP</option>
+              <option value="BUILD">D1抜: BUILD</option>
               <option value="VOCAL">D1抜: VOCAL</option>
               <option value="BREAK">D1抜: BREAK</option>
               <option value="OUTRO">D1抜: OUTRO</option>
@@ -461,6 +541,7 @@
             <select id="filter-method" onchange="renderTransitionCandidates()" class="bg-inset border border-[#252f45] text-slate-300 text-[10px] rounded px-1.5 py-1 outline-none cursor-pointer">
               <option value="ALL">手法: すべて(ハウス20種)</option>
               <option value="house_32bar_classic_a">★王道32小節 パターンA</option>
+              <option value="house_d2_loop_simultaneous">★2曲ほぼ同時再生・D2ループ並走</option>
               <option value="house_hybrid_plateau">★長時間・共存ハイブリッド</option>
               <option value="house_vocal_call_response">★象徴シーソー・交互ボーカル/リフ</option>
               <option value="house_d1_drop_to_d2_drop">★1stDropリレー・バトンタッチ</option>
@@ -549,6 +630,90 @@
           <div id="fx-setup-summary" class="text-[10px] font-mono-num bg-purple-950/20 border border-purple-500/30 rounded px-2 py-1.5 text-purple-200 leading-snug">
             使用エフェクト設定: プランを選択すると FX種類・拍数(ms)・Level数値 を表示します。
           </div>
+
+          <!-- 抽象指示でミックス調整（いつ × どの程度 2軸ディレクター） -->
+          <div id="abstract-director-panel" class="bg-indigo-950/25 border border-indigo-500/35 rounded-lg p-2 flex flex-col gap-2">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-[10px] font-bold text-indigo-300 flex items-center gap-1">
+                🎛️ 2軸ディレクター（いつ × どの程度）
+                <span id="abstract-score-badge" class="text-[9px] font-mono-num px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-200">--点</span>
+              </span>
+              <div class="flex items-center gap-1">
+                <button onclick="playAbstractPreview()" class="text-[9px] px-2 py-0.5 rounded bg-blue-600/80 hover:bg-blue-500 text-white font-bold cursor-pointer transition">▶ 試聴</button>
+                <button onclick="resetAbstractDirectives()" class="text-[9px] px-1.5 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 cursor-pointer transition">リセット</button>
+              </div>
+            </div>
+
+            <!-- 2軸コントロール -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <!-- ① いつ（時間軸・共存の長さ） -->
+              <div class="bg-inset/80 border border-sky-500/25 rounded p-1.5 flex flex-col gap-1">
+                <div class="text-[9px] font-bold text-sky-300">① いつ（タイミング・共存の長さ）</div>
+                <div class="flex items-center justify-between gap-1 text-[9px]">
+                  <span class="text-slate-400 shrink-0">D2イン(Swap前)</span>
+                  <div class="flex gap-1">
+                    <button data-axis="preBars" data-val="4" onclick="setTwoAxisParam('preBars', 4)" class="axis-btn px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600/60 text-slate-300 cursor-pointer">4小節</button>
+                    <button data-axis="preBars" data-val="8" onclick="setTwoAxisParam('preBars', 8)" class="axis-btn px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600/60 text-slate-300 cursor-pointer">8小節</button>
+                    <button data-axis="preBars" data-val="16" onclick="setTwoAxisParam('preBars', 16)" class="axis-btn px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600/60 text-slate-300 cursor-pointer">16小節</button>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between gap-1 text-[9px]">
+                  <span class="text-slate-400 shrink-0">D1残し(Swap後)</span>
+                  <div class="flex gap-1">
+                    <button data-axis="postBars" data-val="4" onclick="setTwoAxisParam('postBars', 4)" class="axis-btn px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600/60 text-slate-300 cursor-pointer">+4小節</button>
+                    <button data-axis="postBars" data-val="8" onclick="setTwoAxisParam('postBars', 8)" class="axis-btn px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600/60 text-slate-300 cursor-pointer">+8小節</button>
+                    <button data-axis="postBars" data-val="16" onclick="setTwoAxisParam('postBars', 16)" class="axis-btn px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600/60 text-slate-300 cursor-pointer">+16小節</button>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between gap-1 text-[9px]">
+                  <span class="text-slate-400 shrink-0">LOW入替点</span>
+                  <div class="flex gap-1">
+                    <button data-axis="swapShift" data-val="-8" onclick="setTwoAxisParam('swapShift', -8)" class="axis-btn px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600/60 text-slate-300 cursor-pointer">2小節早</button>
+                    <button data-axis="swapShift" data-val="0" onclick="setTwoAxisParam('swapShift', 0)" class="axis-btn px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600/60 text-slate-300 cursor-pointer">標準</button>
+                    <button data-axis="swapShift" data-val="8" onclick="setTwoAxisParam('swapShift', 8)" class="axis-btn px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600/60 text-slate-300 cursor-pointer">2小節遅</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ② どの程度（バランス・共存の質感） -->
+              <div class="bg-inset/80 border border-fuchsia-500/25 rounded p-1.5 flex flex-col gap-1">
+                <div class="text-[9px] font-bold text-fuchsia-300">② どの程度（重なりの濃さ・引き方）</div>
+                <div class="flex items-center justify-between gap-1 text-[9px]">
+                  <span class="text-slate-400 shrink-0">D2重ね濃さ</span>
+                  <div class="flex gap-1">
+                    <button data-axis="d2Presence" data-val="0.7" onclick="setTwoAxisParam('d2Presence', 0.7)" class="axis-btn px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600/60 text-slate-300 cursor-pointer">控えめ</button>
+                    <button data-axis="d2Presence" data-val="0.85" onclick="setTwoAxisParam('d2Presence', 0.85)" class="axis-btn px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600/60 text-slate-300 cursor-pointer">標準</button>
+                    <button data-axis="d2Presence" data-val="1" onclick="setTwoAxisParam('d2Presence', 1)" class="axis-btn px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600/60 text-slate-300 cursor-pointer">堂々100%</button>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between gap-1 text-[9px]">
+                  <span class="text-slate-400 shrink-0">D1の引き方</span>
+                  <div class="flex gap-1 flex-wrap justify-end">
+                    <button data-axis="d1ExitStyle" data-val="mid_blend" onclick="setTwoAxisParam('d1ExitStyle', 'mid_blend')" class="axis-btn px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600/60 text-slate-300 cursor-pointer">MID共存</button>
+                    <button data-axis="d1ExitStyle" data-val="hpf_float" onclick="setTwoAxisParam('d1ExitStyle', 'hpf_float')" class="axis-btn px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600/60 text-slate-300 cursor-pointer">HPF浮き</button>
+                    <button data-axis="d1ExitStyle" data-val="echo_melt" onclick="setTwoAxisParam('d1ExitStyle', 'echo_melt')" class="axis-btn px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600/60 text-slate-300 cursor-pointer">Echo溶</button>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between gap-1 text-[9px]">
+                  <span class="text-slate-400 shrink-0">LOW入替幅</span>
+                  <div class="flex gap-1">
+                    <button data-axis="swapDur" data-val="2" onclick="setTwoAxisParam('swapDur', 2)" class="axis-btn px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600/60 text-slate-300 cursor-pointer">キレ2拍</button>
+                    <button data-axis="swapDur" data-val="4" onclick="setTwoAxisParam('swapDur', 4)" class="axis-btn px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600/60 text-slate-300 cursor-pointer">自然4拍</button>
+                    <button data-axis="swapDur" data-val="8" onclick="setTwoAxisParam('swapDur', 8)" class="axis-btn px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600/60 text-slate-300 cursor-pointer">滑らか8拍</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 自然文入力 -->
+            <div class="flex gap-1">
+              <input id="abstract-prompt-input" type="text" placeholder="自然文でも可: 例) 16小節前から入ってSwap後も8小節残す、D2堂々でEcho溶かし" onkeydown="if(event.key==='Enter') submitAbstractPrompt()" class="flex-1 bg-inset border border-[#252f45] rounded px-2 py-1 text-[10px] text-slate-200 placeholder-slate-500 outline-none focus:border-indigo-400">
+              <button onclick="submitAbstractPrompt()" class="shrink-0 px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold cursor-pointer transition">具体化</button>
+            </div>
+            <div id="abstract-materialized-log" class="text-[9px] font-mono-num text-indigo-200/90 leading-snug">
+              Drop前後の共存時間（いつ）と、Fader/MID/余韻の深さ（どの程度）を分けて調整できます。
+            </div>
+          </div>
         </div>
 
         <div id="preset-desc" class="text-[11px] leading-relaxed text-slate-400 bg-inset border border-[#1d2436] rounded-lg p-2.5">
@@ -592,6 +757,102 @@
 
     </aside>
   </main>
+
+  <!-- DAWマルチトラック・タイムライン編集 ワイドモーダル -->
+  <div id="puzzle-editor-panel" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3" onclick="if(event.target === this) togglePuzzleEditor()">
+    <div class="bg-[#0b1120] border border-fuchsia-500/50 rounded-2xl max-w-6xl w-[96vw] max-h-[90vh] flex flex-col shadow-2xl overflow-hidden text-xs">
+      <!-- Header -->
+      <div class="px-4 py-2.5 border-b border-[#1d2436] bg-inset flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+          <span class="text-sm font-extrabold text-fuchsia-300">🎹 DAWマルチトラック編集（なにを・いつ・どれだけ・どの程度）</span>
+          <span id="puzzle-live-score" class="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold font-mono-num text-xs">--点</span>
+          <span id="daw-live-playhead-pos" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-600/60 text-slate-400 font-bold font-mono-num text-[11px]">■ 停止中</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="flex items-center gap-1 text-[11px] text-slate-300 cursor-pointer mr-1">
+            <input type="checkbox" id="daw-snap4-toggle" checked class="accent-fuchsia-500 cursor-pointer">
+            <span>4拍(1小節)スナップ</span>
+          </label>
+          <button onclick="playPuzzlePreview()" class="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold cursor-pointer transition">
+            ▶ 試聴
+          </button>
+          <button onclick="stopPerformance()" class="px-3 py-1 rounded-lg bg-red-600/80 hover:bg-red-500 text-white font-bold cursor-pointer transition">
+            ■ 停止
+          </button>
+          <button onclick="loadCurrentScoreToPuzzle()" class="px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 cursor-pointer transition">
+            再読込
+          </button>
+          <button onclick="togglePuzzleEditor()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-elevated cursor-pointer transition" title="閉じる">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="p-3 overflow-y-auto flex flex-col gap-2.5">
+        <!-- D1 / D2 Song Position Offset Bar -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 bg-inset/90 border border-[#252f45] rounded-xl p-2 font-mono-num text-[11px]">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-sky-300 font-bold">D1 出口位置:</span>
+            <span id="puzzle-d1-pos" class="text-slate-100 font-semibold truncate">--</span>
+            <div class="flex gap-1 shrink-0">
+              <button onclick="shiftPuzzleTrackOffset(1, -4)" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-sky-300 font-bold cursor-pointer">◀ -4小節</button>
+              <button onclick="shiftPuzzleTrackOffset(1, 4)" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-sky-300 font-bold cursor-pointer">+4小節 ▶</button>
+            </div>
+          </div>
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-rose-300 font-bold">D2 入口位置:</span>
+            <span id="puzzle-d2-pos" class="text-slate-100 font-semibold truncate">--</span>
+            <div class="flex gap-1 shrink-0">
+              <button onclick="shiftPuzzleTrackOffset(2, -4)" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-rose-300 font-bold cursor-pointer">◀ -4小節</button>
+              <button onclick="shiftPuzzleTrackOffset(2, 4)" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-rose-300 font-bold cursor-pointer">+4小節 ▶</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- DAW Multitrack Timeline Container -->
+        <div class="border border-[#252f45] rounded-xl bg-[#070b14] overflow-hidden flex flex-col">
+          <div id="puzzle-timeline-grid" class="flex overflow-x-auto select-none"></div>
+          <div class="px-3 py-1 bg-[#0d1424] border-t border-[#1d2436] text-[10px] text-slate-400 flex justify-between">
+            <span>💡 ヒント: クリップを<b class="text-slate-200">左右ドラッグ</b>で「いつ」、<b class="text-slate-200">右端ドラッグ</b>で「どれだけ」、<b class="text-slate-200">空きレーンをクリック</b>で新規追加</span>
+            <span>色バーの高さ・数値 ＝「どの程度」</span>
+          </div>
+        </div>
+
+        <!-- Selected Clip Inspector ("いつ・どれだけ・どの程度") -->
+        <div class="bg-inset/95 border border-[#252f45] rounded-xl p-2.5 flex flex-col gap-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span id="puzzle-selected-label" class="text-fuchsia-200 font-bold text-xs">クリップをクリックして「いつ・どれだけ・どの程度」を編集</span>
+            <div id="daw-inspector-controls" class="hidden flex flex-wrap items-center gap-3 text-[11px] font-mono-num">
+              <div class="flex items-center gap-1">
+                <span class="text-slate-400">いつ(開始拍):</span>
+                <button onclick="nudgeSelectedClip('beat', -4)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">-4</button>
+                <button onclick="nudgeSelectedClip('beat', -1)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">-1</button>
+                <span id="daw-insp-beat" class="text-sky-300 font-bold min-w-[44px] text-center">B1</span>
+                <button onclick="nudgeSelectedClip('beat', 1)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">+1</button>
+                <button onclick="nudgeSelectedClip('beat', 4)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">+4</button>
+              </div>
+              <div class="flex items-center gap-1" id="daw-insp-dur-wrap">
+                <span class="text-slate-400">どれだけ(拍):</span>
+                <button onclick="nudgeSelectedClip('dur', -2)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">-2</button>
+                <span id="daw-insp-dur" class="text-amber-300 font-bold min-w-[36px] text-center">8b</span>
+                <button onclick="nudgeSelectedClip('dur', 2)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">+2</button>
+              </div>
+              <div class="flex items-center gap-1.5" id="daw-insp-val-wrap">
+                <span class="text-slate-400">どの程度:</span>
+                <input id="daw-insp-val-slider" type="range" min="0" max="1" step="0.05" oninput="setSelectedClipValue(this.value)" class="w-28 accent-fuchsia-500 cursor-pointer">
+                <span id="daw-insp-val-text" class="text-emerald-300 font-bold min-w-[90px]">100%</span>
+              </div>
+              <button onclick="deleteSelectedClip()" class="px-2 py-0.5 rounded bg-red-900/70 hover:bg-red-700 text-red-200 font-bold cursor-pointer">削除</button>
+            </div>
+          </div>
+          <div id="puzzle-live-reason" class="text-[11px] font-mono-num text-emerald-300/90 leading-snug pt-1.5 border-t border-[#1d2436]">
+            リアルタイム評価: --
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- 使用方法マニュアル モーダル -->
   <div id="manual-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4" onclick="if(event.target === this) closeManual()">
@@ -1136,24 +1397,52 @@
       };
 
       const activeSec = deckNum === 1 ? a.recommendedOutSec : a.recommendedInSec;
-      container.innerHTML = a.sections.map((sec) => {
+      const totalBlocks = Math.max(1, a.sections.reduce((s, x) => s + (x.blockCount || 1), 0));
+
+      const barColors = {
+        INTRO: 'bg-teal-500/70 hover:bg-teal-400',
+        DROP: 'bg-rose-500/85 hover:bg-rose-400',
+        BUILD: 'bg-amber-500/80 hover:bg-amber-400',
+        VOCAL: 'bg-fuchsia-500/75 hover:bg-fuchsia-400',
+        BREAK: 'bg-purple-500/75 hover:bg-purple-400',
+        GROOVE: 'bg-sky-500/70 hover:bg-sky-400',
+        OUTRO: 'bg-emerald-500/70 hover:bg-emerald-400'
+      };
+
+      const timelineBarHtml = `
+        <div class="w-full h-5 rounded overflow-hidden flex border border-[#252f45] bg-[#0b101d] mb-1.5">
+          ${a.sections.map((sec) => {
+            const pctW = ((sec.blockCount || 1) / totalBlocks) * 100;
+            const bg = barColors[sec.type] || barColors.GROOVE;
+            const isSel = Math.abs(activeSec - sec.startSec) < 0.25;
+            const label = sec.type === 'DROP' ? `DROP${sec.dropIndex || ''}` : sec.type;
+            return `<button onclick="previewSection(${deckNum}, ${sec.startSec})" style="width:${pctW.toFixed(2)}%" class="${bg} ${isSel ? 'ring-2 ring-white inset-ring' : ''} h-full border-r border-black/40 text-[9px] font-bold text-white truncate px-0.5 cursor-pointer transition" title="${label} (${sec.startBar}-${sec.endBar}小節 / ${formatTimeMinSec(sec.startSec)}) クリックで試聴">${pctW >= 7 ? label : ''}</button>`;
+          }).join('')}
+        </div>
+      `;
+
+      const pillsHtml = a.sections.map((sec) => {
         const cls = badgeStyle[sec.type] || badgeStyle.GROOVE;
         const isSelected = Math.abs(activeSec - sec.startSec) < 0.25;
         const ring = isSelected ? 'ring-1 ring-white shadow-sm' : '';
-        const star = sec.type === 'DROP' ? '★' : '';
+        const titleLabel = sec.type === 'DROP' ? `DROP${sec.dropIndex || ''}★` : sec.type;
+        const barsLen = (sec.endBar - sec.startBar + 1);
         const actionLabel = deckNum === 1 ? 'OUT' : 'IN';
         return `
-          <div class="inline-flex items-center rounded border ${cls} ${ring} overflow-hidden">
-            <button onclick="previewSection(${deckNum}, ${sec.startSec})" class="px-1.5 py-0.5 hover:bg-white/10 cursor-pointer text-left" title="クリックで ${formatTimeMinSec(sec.startSec)} から試聴 (Low:${Math.round(sec.avgLow*100)}% Mid:${Math.round((sec.avgMid||0)*100)}% High:${Math.round(sec.avgHigh*100)}%)">
-              <span class="font-bold">${sec.type}${star}</span>
-              <span class="opacity-75">${sec.startBar}-${sec.endBar}小節(${formatTimeMinSec(sec.startSec)})</span>
+          <div class="inline-flex items-center rounded border ${cls} ${ring} overflow-hidden text-[10px]">
+            <button onclick="previewSection(${deckNum}, ${sec.startSec})" class="px-1.5 py-0.5 hover:bg-white/10 cursor-pointer text-left leading-tight" title="クリックで ${formatTimeMinSec(sec.startSec)} から試聴 (Low:${Math.round(sec.avgLow*100)}% Mid:${Math.round((sec.avgMid||0)*100)}% High:${Math.round(sec.avgHigh*100)}%)">
+              <span class="font-bold">${titleLabel}</span>
+              <span class="opacity-85 font-mono-num">${sec.startBar}-${sec.endBar}小節(${barsLen}小節)</span>
+              <span class="opacity-65 font-mono-num">${formatTimeMinSec(sec.startSec)}</span>
             </button>
-            <button onclick="selectSectionPoint(${deckNum}, ${sec.startSec}, '${sec.type} ${sec.startBar}-${sec.endBar}小節')" class="px-1 py-0.5 bg-black/30 hover:bg-white/20 text-[9px] font-bold border-l border-white/10 cursor-pointer" title="このセクション頭を ${actionLabel} に設定">
+            <button onclick="selectSectionPoint(${deckNum}, ${sec.startSec}, '${titleLabel} ${sec.startBar}-${sec.endBar}小節')" class="px-1.5 py-0.5 bg-black/30 hover:bg-white/20 text-[9px] font-bold border-l border-white/10 cursor-pointer self-stretch flex items-center" title="このセクション頭を ${actionLabel} に設定">
               ${actionLabel}
             </button>
           </div>
         `;
       }).join('');
+
+      container.innerHTML = `${timelineBarHtml}<div class="flex flex-wrap gap-1">${pillsHtml}</div>`;
     }
 
     function copyStoryMapPrompt() {
@@ -1190,7 +1479,7 @@
 
       const duration = buffer.duration;
       const barSec = (60.0 / bpm) * 4.0;
-      const blockBars = 2;
+      const blockBars = 1;
       const blockSec = barSec * blockBars;
 
       const raw = buffer.getChannelData(0);
@@ -1211,11 +1500,13 @@
       let maxRms = 0.0001;
 
       let lp150 = 0, lp300 = 0, lp2800 = 0, hpState = 0, prevIn = 0;
+      const beatSec = barSec / 4;
 
       for (let tSec = firstDownbeat; tSec + 0.5 < duration; tSec += blockSec) {
         const startIdx = Math.max(0, Math.floor(tSec * sr));
         const endIdx = Math.min(raw.length, Math.floor((tSec + blockSec) * sr));
         let sumLow = 0, sumMid = 0, sumHigh = 0, sumAll = 0, count = 0;
+        let sumLowOn = 0, cntOn = 0, sumLowOff = 0, cntOff = 0;
 
         for (let i = startIdx; i < endIdx; i += stride) {
           const x = raw[i];
@@ -1226,17 +1517,26 @@
           hpState = hp3200 * (hpState + x - prevIn);
           prevIn = x;
 
-          sumLow += lp150 * lp150;
+          const lowSq = lp150 * lp150;
+          sumLow += lowSq;
           sumMid += midVal * midVal;
           sumHigh += hpState * hpState;
           sumAll += x * x;
           count++;
+
+          const tSample = i / sr;
+          const phase = (((tSample - firstDownbeat) % beatSec) + beatSec) % beatSec / beatSec;
+          if (phase < 0.30) { sumLowOn += lowSq; cntOn++; }
+          else if (phase >= 0.45 && phase < 0.85) { sumLowOff += lowSq; cntOff++; }
         }
 
         const lowRms = count > 0 ? Math.sqrt(sumLow / count) : 0;
         const midRms = count > 0 ? Math.sqrt(sumMid / count) : 0;
         const highRms = count > 0 ? Math.sqrt(sumHigh / count) : 0;
         const rms = count > 0 ? Math.sqrt(sumAll / count) : 0;
+        const onRms = cntOn > 0 ? Math.sqrt(sumLowOn / cntOn) : lowRms;
+        const offRms = cntOff > 0 ? Math.sqrt(sumLowOff / cntOff) : lowRms;
+        const kickPulse = Number(((onRms + 1e-5) / (offRms + 1e-5)).toFixed(3));
         if (lowRms > maxLow) maxLow = lowRms;
         if (midRms > maxMid) maxMid = midRms;
         if (highRms > maxHigh) maxHigh = highRms;
@@ -1248,7 +1548,8 @@
           lowRms,
           midRms,
           highRms,
-          rms
+          rms,
+          kickPulse
         });
       }
 
@@ -1259,105 +1560,150 @@
         b.energy = Number((b.rms / maxRms).toFixed(3));
       });
 
-      // 範囲的・相対分布モデルによるセクション分類 (INTRO / GROOVE / BREAK / VOCAL / BUILD / DROP / OUTRO)
-      const pct = (arr, q) => {
-        if (!arr.length) return 0.5;
-        const s = [...arr].sort((a, b) => a - b);
-        return s[Math.min(s.length - 1, Math.floor(s.length * q))];
-      };
-      const lowP30 = pct(blocks.map(b => b.low), 0.30);
-      const lowP55 = pct(blocks.map(b => b.low), 0.55);
-      const energyP60 = pct(blocks.map(b => b.energy), 0.60);
-      const midP50 = pct(blocks.map(b => b.mid), 0.50);
-
-      const dropLowThresh = Math.max(0.48, lowP55);
-      const dropEnergyThresh = Math.max(0.52, energyP60);
-      const breakLowThresh = Math.min(0.44, Math.max(0.24, lowP30));
-      const vocalMidThresh = Math.max(0.42, midP50);
-
-      // 移動窓平均（範囲的に見て2小節単位のノイズ揺れを抑える）
-      const winAvg = (idx, key) => {
-        const from = Math.max(0, idx - 1);
-        const to = Math.min(blocks.length - 1, idx + 1);
-        let sum = 0, cnt = 0;
-        for (let k = from; k <= to; k++) { sum += blocks[k][key]; cnt++; }
-        return sum / Math.max(1, cnt);
+      // === 新設計（3ステップ構造解析：変化点Novelty ＋ フレーズ境界スナップ ＋ DROP基準比） ===
+      const meanStats = (slice) => {
+        const n = Math.max(1, slice.length);
+        return {
+          low: slice.reduce((s, b) => s + b.low, 0) / n,
+          mid: slice.reduce((s, b) => s + b.mid, 0) / n,
+          high: slice.reduce((s, b) => s + b.high, 0) / n,
+          energy: slice.reduce((s, b) => s + b.energy, 0) / n,
+          kickPulse: slice.reduce((s, b) => s + b.kickPulse, 0) / n
+        };
       };
 
-      // 第1パス：範囲平均＋位置による基礎分類
-      blocks.forEach((b, idx) => {
-        const ratio = b.startSec / duration;
-        const wLow = winAvg(idx, 'low');
-        const wEnergy = winAvg(idx, 'energy');
-
-        if (b.barIndex <= 15 && ratio < 0.22) {
-          b.type = 'INTRO';
-        } else if (wLow >= dropLowThresh && wEnergy >= dropEnergyThresh && ratio < 0.88) {
-          b.type = 'DROP';
-        } else if (b.low < breakLowThresh && wLow < breakLowThresh + 0.08) {
-          b.type = (b.mid >= vocalMidThresh) ? 'VOCAL' : 'BREAK';
-        } else if (ratio >= 0.78) {
-          b.type = 'OUTRO';
-        } else if (ratio < 0.22) {
-          b.type = 'INTRO';
-        } else {
-          b.type = 'GROOVE';
-        }
-      });
-
-      // 第2パス：2小節だけの孤立飛び地を前後セクションへ吸収（範囲の連続性を保つ）
-      for (let i = 1; i < blocks.length - 1; i++) {
-        if (blocks[i - 1].type === blocks[i + 1].type && blocks[i].type !== blocks[i - 1].type) {
-          blocks[i].type = blocks[i - 1].type;
-        }
+      // Step 1: 4小節前後のコントラスト（Novelty曲線）から曲の「構造の切れ目」を抽出
+      const novelty = new Array(blocks.length).fill(0);
+      for (let i = 4; i <= blocks.length - 4; i++) {
+        const p = meanStats(blocks.slice(i - 4, i));
+        const q = meanStats(blocks.slice(i, i + 4));
+        novelty[i] =
+          Math.abs(q.low - p.low) * 1.4 +
+          Math.abs(q.energy - p.energy) * 1.2 +
+          Math.abs(q.kickPulse - p.kickPulse) * 0.45 +
+          Math.abs(q.mid - p.mid) * 0.5;
       }
 
-      // 第3パス：本当に DROP へ接続する直前範囲（2〜4ブロック＝4〜8小節）だけを BUILD として切り出す
-      for (let i = 1; i < blocks.length; i++) {
-        if (blocks[i].type === 'DROP' && blocks[i - 1].type !== 'DROP') {
-          let lookback = 0;
-          for (let j = i - 1; j >= 0 && lookback < 3; j--, lookback++) {
-            const cand = blocks[j];
-            if (cand.type === 'DROP' || cand.type === 'OUTRO') break;
-            // 直前がBREAK/VOCAL/GROOVE/INTROで、エネルギーまたは高域がDROPへ向けて立ち上がっている範囲をBUILDに
-            const risingToDrop = (cand.energy < blocks[i].energy * 0.95) &&
-              (lookback === 0 || cand.high >= blocks[j - 1]?.high * 0.92 || cand.type === 'BREAK' || cand.type === 'VOCAL');
-            if (risingToDrop && cand.barIndex > 8) {
-              cand.type = 'BUILD';
-            } else {
-              break;
-            }
+      // rekordbox XMLのCue（設定されている場合）も境界候補として保持
+      const cueAnchorBars = new Set();
+      if (xmlMeta && xmlMeta.cues) {
+        Object.values(xmlMeta.cues).forEach(cue => {
+          if (cue && typeof cue.time_sec === 'number' && cue.time_sec > firstDownbeat + barSec) {
+            const cBar = Math.round((cue.time_sec - firstDownbeat) / barSec) + 1;
+            if (cBar > 1) cueAnchorBars.add(cBar);
           }
-        }
+        });
       }
 
-      // 第4パス：最後のDROPが終わった後の終盤(ratio>=0.74)はOUTROへ整理
-      let lastDropIdx = -1;
-      blocks.forEach((b, idx) => { if (b.type === 'DROP') lastDropIdx = idx; });
-      if (lastDropIdx >= 0) {
-        for (let i = lastDropIdx + 1; i < blocks.length; i++) {
-          if ((blocks[i].startSec / duration) >= 0.74 && blocks[i].type === 'GROOVE') {
+      // ピーク抽出（最小間隔8小節、強い変化点のみ採用＋前後±2小節の1小節ステップ最大点へスナップ）
+      const rawPeaks = [];
+      for (let i = 4; i <= blocks.length - 4; i++) {
+        const isLocalPeak = novelty[i] >= 0.34 &&
+          novelty[i] >= novelty[i - 1] && novelty[i] >= novelty[i + 1] &&
+          novelty[i] >= novelty[i - 2] && novelty[i] >= novelty[i + 2];
+        if (isLocalPeak || cueAnchorBars.has(blocks[i].barIndex)) {
+          rawPeaks.push({ idx: i, score: cueAnchorBars.has(blocks[i].barIndex) ? 9.9 : novelty[i] });
+        }
+      }
+      rawPeaks.sort((a, b) => b.score - a.score);
+      const selectedIdx = [0];
+      for (const pk of rawPeaks) {
+        if (selectedIdx.every(s => Math.abs(s - pk.idx) >= 8) && pk.idx <= blocks.length - 4) {
+          // 前後±2小節で「1小節単位の段差」が最も鋭い小節へスナップ
+          let bestIdx = pk.idx;
+          let bestJump = -1;
+          for (let k = Math.max(4, pk.idx - 2); k <= Math.min(blocks.length - 4, pk.idx + 2); k++) {
+            const jump = Math.abs(blocks[k].low - blocks[k - 1].low) * 1.4 +
+              Math.abs(blocks[k].energy - blocks[k - 1].energy) * 1.2;
+            if (jump > bestJump) { bestJump = jump; bestIdx = k; }
+          }
+          selectedIdx.push(bestIdx);
+        }
+      }
+      selectedIdx.sort((a, b) => a - b);
+
+      // Step 2: 曲中で最もキック＋低音が強い8小節窓（上位20%）を「DROP基準レベル」とする
+      const win8 = [];
+      for (let i = 0; i <= blocks.length - 8; i += 2) {
+        const m = meanStats(blocks.slice(i, i + 8));
+        if (m.kickPulse >= 1.08) {
+          win8.push({ ...m, score: 0.55 * m.low + 0.45 * m.energy });
+        }
+      }
+      win8.sort((a, b) => b.score - a.score);
+      const topSlice = win8.slice(0, Math.max(1, Math.ceil(win8.length * 0.20)));
+      const refDropLow = topSlice.length ? topSlice.reduce((s, w) => s + w.low, 0) / topSlice.length : 0.72;
+      const refDropEnergy = topSlice.length ? topSlice.reduce((s, w) => s + w.energy, 0) / topSlice.length : 0.72;
+
+      // Step 3: 確定した各区間を DROP基準比 でシンプルに分類
+      const segments = [];
+      for (let s = 0; s < selectedIdx.length; s++) {
+        const start = selectedIdx[s];
+        const end = (s + 1 < selectedIdx.length) ? selectedIdx[s + 1] : blocks.length;
+        const slice = blocks.slice(start, end);
+        if (!slice.length) continue;
+        const m = meanStats(slice);
+        const ratio = slice[0].startSec / duration;
+
+        let segType = 'GROOVE';
+        const isTrueDrop = (m.low >= refDropLow * 0.84 && m.energy >= refDropEnergy * 0.84 && ratio < 0.94) &&
+          (m.kickPulse >= 1.08 || (m.low >= refDropLow * 0.90 && m.energy >= refDropEnergy * 0.90));
+        if (isTrueDrop) {
+          segType = 'DROP';
+        } else if (m.low < refDropLow * 0.55 && m.energy < refDropEnergy * 0.74) {
+          segType = (m.mid >= m.low * 1.25 && m.mid >= 0.38) ? 'VOCAL' : 'BREAK';
+        } else if (ratio >= 0.76) {
+          segType = 'OUTRO';
+        } else if (ratio < 0.22 && slice[0].barIndex <= 17) {
+          segType = 'INTRO';
+        }
+        slice.forEach(b => { b.type = segType; });
+        segments.push({ start, end, type: segType });
+      }
+
+      // 最後のDROPより後ろにある終盤(>=74%)のGROOVE/BREAKはOUTROへ整理
+      let lastDropBarIdx = -1;
+      blocks.forEach((b, idx) => { if (b.type === 'DROP') lastDropBarIdx = idx; });
+      if (lastDropBarIdx >= 0) {
+        for (let i = lastDropBarIdx + 1; i < blocks.length; i++) {
+          if ((blocks[i].startSec / duration) >= 0.74 && (blocks[i].type === 'GROOVE' || blocks[i].type === 'BREAK')) {
             blocks[i].type = 'OUTRO';
           }
         }
       }
 
-      // 連続する同タイプブロックを結合して「曲の地図（Story Map）」を生成
+      // DROP直前4小節が立ち上がりなら BUILD として切り出し
+      for (let i = 4; i < blocks.length; i++) {
+        if (blocks[i].type === 'DROP' && blocks[i - 1].type !== 'DROP' && blocks[i - 1].type !== 'OUTRO') {
+          const pre = meanStats(blocks.slice(i - 4, i));
+          if (pre.energy < blocks[i].energy * 0.94 && blocks[i - 4].barIndex > 4) {
+            for (let j = i - 4; j < i; j++) blocks[j].type = 'BUILD';
+          }
+        }
+      }
+
+      // 連続する同タイプブロックを結合して「曲の地図（Story Map）」を生成（Cue境界では分割維持）
       const sections = [];
+      let dropCounter = 0;
       blocks.forEach((b) => {
         const last = sections[sections.length - 1];
-        if (last && last.type === b.type) {
+        const isCueBoundary = cueAnchorBars.has(b.barIndex);
+        if (last && last.type === b.type && !isCueBoundary) {
           last.endBar = b.barIndex + blockBars - 1;
           last.blockCount += 1;
           last.sumLow += b.low;
           last.sumMid += b.mid;
           last.sumHigh += b.high;
+          last.sumKick += b.kickPulse;
           last.avgLow = last.sumLow / last.blockCount;
           last.avgMid = last.sumMid / last.blockCount;
           last.avgHigh = last.sumHigh / last.blockCount;
+          last.avgKick = last.sumKick / last.blockCount;
         } else {
+          if (b.type === 'DROP') dropCounter++;
           sections.push({
             type: b.type,
+            dropIndex: b.type === 'DROP' ? dropCounter : null,
             startBar: b.barIndex,
             endBar: b.barIndex + blockBars - 1,
             startSec: b.startSec,
@@ -1365,9 +1711,11 @@
             sumLow: b.low,
             sumMid: b.mid,
             sumHigh: b.high,
+            sumKick: b.kickPulse,
             avgLow: b.low,
             avgMid: b.mid,
-            avgHigh: b.high
+            avgHigh: b.high,
+            avgKick: b.kickPulse
           });
         }
       });
@@ -1421,19 +1769,142 @@
       deckAnalysis[deckNum] = analysis;
       deckTrackNames[deckNum] = trackName;
       const bpmLabelEl = document.getElementById(`d${deckNum}-bpm-label`);
-      if (bpmLabelEl) bpmLabelEl.innerText = `${bpm} BPM${detectedKey ? ' / ' + detectedKey : ''}`;
+      if (bpmLabelEl) {
+        const srcTag = xmlMeta ? ' [RB-XML]' : ' [音解析]';
+        bpmLabelEl.innerText = `${bpm} BPM${detectedKey ? ' / ' + detectedKey : ''}${srcTag}`;
+      }
       renderStoryMap(deckNum);
       updateAutoMixSummary();
       if (deckAnalysis[1] && deckAnalysis[2]) {
         buildTransitionCandidates();
       }
+      refineStructureWithPython(buffer, deckNum, analysis, xmlMeta);
       return analysis;
+    }
+
+    async function refineStructureWithPython(buffer, deckNum, analysis, xmlMeta) {
+      try {
+        const targetSr = 11025;
+        const srcData = buffer.getChannelData(0);
+        const step = Math.max(1, Math.round(buffer.sampleRate / targetSr));
+        const effSr = Math.round(buffer.sampleRate / step);
+        const nOut = Math.floor(srcData.length / step);
+        const pcm16 = new Int16Array(nOut);
+        for (let i = 0, j = 0; i < nOut; i++, j += step) {
+          const v = Math.max(-1, Math.min(1, srcData[j]));
+          pcm16[i] = v < 0 ? v * 32768 : v * 32767;
+        }
+        const cues = (xmlMeta && xmlMeta.cues)
+          ? Object.values(xmlMeta.cues).map(c => c.time_sec).filter(t => typeof t === 'number').join(',')
+          : '';
+        const qs = new URLSearchParams({
+          sr: String(effSr),
+          bpm: String(analysis.bpm),
+          firstDownbeat: String(analysis.firstDownbeat),
+          duration: String(analysis.duration),
+          cues
+        });
+        const res = await fetch(`/api/analyze-structure?${qs.toString()}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/octet-stream' },
+          body: pcm16.buffer
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.success || !Array.isArray(data.sections) || !data.sections.length) return;
+        if (deckAnalysis[deckNum] !== analysis) return;
+
+        analysis.blocks = data.blocks;
+        analysis.sections = data.sections;
+        analysis.engine = data.engine || 'py-mir-ssm';
+
+        const drops = analysis.sections.filter(s => s.type === 'DROP');
+        const targetDrop = drops.length >= 2 ? drops[drops.length - 1] : drops[0];
+        if (targetDrop) {
+          const dropBars = targetDrop.endBar - targetDrop.startBar + 1;
+          const offsetBars = dropBars >= 16 ? Math.max(0, dropBars - 8) : 0;
+          analysis.recommendedOutSec = Number((targetDrop.startSec + offsetBars * analysis.barSec).toFixed(3));
+        }
+        const firstBuild = analysis.sections.find(s => s.type === 'BUILD' && s.startSec < analysis.duration * 0.65);
+        const firstGroove = analysis.sections.find(s => s.type === 'GROOVE' && s.startSec < analysis.duration * 0.4);
+        if (firstBuild) analysis.buildupInSec = firstBuild.startSec;
+        if (!xmlMeta || !xmlMeta.cues || !Object.keys(xmlMeta.cues).length) {
+          if (firstGroove) analysis.recommendedInSec = firstGroove.startSec;
+          else if (firstBuild) analysis.recommendedInSec = firstBuild.startSec;
+        }
+
+        const bpmLabelEl = document.getElementById(`d${deckNum}-bpm-label`);
+        const profTag = data.profile === 'STEADY_GROOVE' ? '持続グルーヴ' : 'メリハリ';
+        if (bpmLabelEl && !bpmLabelEl.innerText.includes('[PY-MIR')) {
+          bpmLabelEl.innerText += ` [PY-MIR:${profTag}]`;
+        }
+        renderStoryMap(deckNum);
+        updateAutoMixSummary();
+        if (deckAnalysis[1] && deckAnalysis[2]) {
+          buildTransitionCandidates();
+        }
+      } catch (e) {
+        // Python解析が使えない環境ではJS初期解析をそのまま維持
+      }
     }
 
     let transitionCandidates = [];
     let activeCandidateIndex = -1;
 
+    function preserveMidBlend(plan, style = '') {
+      if (!plan) return plan;
+      const isQuickCutStyle = [
+        'house_quick_drop_cut', 'house_echo_wash_out',
+        'house_loop_roll_drop', 'house_echo_freeze_loop'
+      ].includes(style);
+
+      if (plan.initial_state && plan.initial_state.deck2) {
+        const d2 = plan.initial_state.deck2;
+        if (typeof d2.mid === 'number') d2.mid = Math.max(0.80, d2.mid);
+        if (typeof d2.high === 'number') d2.high = Math.max(0.85, d2.high);
+      }
+      if (Array.isArray(plan.sequence)) {
+        plan.sequence = plan.sequence.map(cmd => {
+          if (cmd.target === 'EQ_MID') {
+            const v = Number(cmd.value);
+            return {
+              ...cmd,
+              value: Number.isFinite(v) ? Math.max(0.68, v) : cmd.value,
+              duration_beats: Math.max(8, cmd.duration_beats || 8)
+            };
+          }
+          if (!isQuickCutStyle && cmd.deck === 2 && cmd.target === 'FADER' && Number(cmd.value) > 0 && Number(cmd.value) < 0.85) {
+            return { ...cmd, value: 0.85 };
+          }
+          return cmd;
+        });
+
+        if (!isQuickCutStyle) {
+          const lowSwap = plan.sequence.find(c => c.target === 'EQ_LOW');
+          const d1FadeOut = plan.sequence.find(c => c.deck === 1 && c.target === 'FADER' && Number(c.value) === 0);
+          if (lowSwap && d1FadeOut) {
+            const minFadeStart = lowSwap.beat + 12;
+            if (d1FadeOut.beat < minFadeStart) {
+              d1FadeOut.beat = minFadeStart;
+            }
+            d1FadeOut.duration_beats = Math.max(16, d1FadeOut.duration_beats || 16);
+            const fadeEnd = d1FadeOut.beat + d1FadeOut.duration_beats;
+            const d1FxOff = plan.sequence.find(c => c.deck === 1 && c.target === 'BEAT_FX' && c.value === 'OFF');
+            if (d1FxOff && d1FxOff.beat < fadeEnd) {
+              d1FxOff.beat = fadeEnd;
+            }
+          }
+        }
+        plan.sequence.sort((a, b) => a.beat - b.beat);
+      }
+      return plan;
+    }
+
     function makeScoreForPlan(style, masterBpm, bpm1, bpm2, outSec, inSec, title, desc) {
+      return preserveMidBlend(buildRawScoreForPlan(style, masterBpm, bpm1, bpm2, outSec, inSec, title, desc), style);
+    }
+
+    function buildRawScoreForPlan(style, masterBpm, bpm1, bpm2, outSec, inSec, title, desc) {
       if (style === 'house_32bar_classic_a') {
         // パターンA：王道「Outro to Intro」32小節(128拍)ロングブレンド（両手2本厳守）
         // Bar 1-8(1-32拍): D2 Vol 0->70% & HI馴染ませ / Bar 9-16(33-64拍): D2 MID開放 & Vol 100%
@@ -1993,6 +2464,35 @@
           ]
         };
       }
+      if (style === 'house_d2_loop_simultaneous') {
+        // 2曲ほぼ同時再生・D2ループ並走: Beat 1から両方スタートし、D2を8拍ループさせて並走→49拍でループ解除＆Bass Swap
+        return {
+          routine_name: title,
+          description: desc,
+          bpm: masterBpm,
+          initial_state: {
+            deck1: { fader: 1.0, low: 1.0, mid: 1.0, high: 1.0, filter: 0.0, drums: true, vocal: true, inst: true },
+            deck2: { fader: 0.0, low: 0.0, mid: 0.88, high: 0.92, filter: 0.0, drums: true, vocal: true, inst: true }
+          },
+          sequence: [
+            { beat: 1.0, deck: 1, target: 'PLAY', action: 'cut', offset_sec: outSec, source_bpm: bpm1 },
+            { beat: 1.0, deck: 2, target: 'PLAY', action: 'cut', offset_sec: inSec, source_bpm: bpm2 },
+            { beat: 1.0, deck: 2, target: 'LOOP', value: 8, action: 'cut' },
+            { beat: 1.0, deck: 2, target: 'FADER', value: 0.90, action: 'ramp', duration_beats: 8 },
+            { beat: 17.0, deck: 2, target: 'EQ_MID', value: 1.0, action: 'ramp', duration_beats: 8 },
+            { beat: 17.0, deck: 2, target: 'EQ_HIGH', value: 1.0, action: 'ramp', duration_beats: 8 },
+            // 49拍(1拍目ジャスト): D2ループ解除と同時にBass Swap＆D2フェーダー100%
+            { beat: 49.0, deck: 2, target: 'LOOP', value: 0, action: 'cut' },
+            { beat: 49.0, deck: 1, target: 'EQ_LOW', value: 0.0, action: 'ramp', duration_beats: 4 },
+            { beat: 49.0, deck: 2, target: 'EQ_LOW', value: 1.0, action: 'ramp', duration_beats: 4 },
+            { beat: 49.0, deck: 2, target: 'FADER', value: 1.0, action: 'ramp', duration_beats: 4 },
+            // 65-89拍: Swap後もD1を16拍残してからゆっくり溶かす
+            { beat: 65.0, deck: 1, target: 'EQ_MID', value: 0.72, action: 'ramp', duration_beats: 12 },
+            { beat: 65.0, deck: 1, target: 'FILTER', value: 0.35, action: 'ramp', duration_beats: 24 },
+            { beat: 65.0, deck: 1, target: 'FADER', value: 0.0, action: 'ramp', duration_beats: 24 }
+          ]
+        };
+      }
       if (style === 'house_echo_wash_out') {
         return {
           routine_name: title,
@@ -2114,7 +2614,36 @@
       };
     }
 
-    function scoreTransitionFit(score, a1, a2, exit, entry, method) {
+    // 8つのDJつなぎシーン別 評価重みテーブル
+    const SCENE_PROFILES = {
+      drop_to_groove:  { label: '👑Drop流し切りブレンド', enforceDropFinish: true,  allowEarlyBuildCut: false, keyStrictness: 1.0, coexistTarget: 24, fxBonus: false, dropLandingBonus: false },
+      drop_to_drop:    { label: '🔥Dropリレー',           enforceDropFinish: true,  allowEarlyBuildCut: false, keyStrictness: 1.1, coexistTarget: 16, fxBonus: false, dropLandingBonus: false },
+      groove_blend:    { label: '🎛️グルーヴ溶かし',       enforceDropFinish: false, allowEarlyBuildCut: false, keyStrictness: 1.0, coexistTarget: 32, fxBonus: false, dropLandingBonus: false },
+      build_to_drop:   { label: '⚡ビルド→Drop切替',     enforceDropFinish: false, allowEarlyBuildCut: true,  keyStrictness: 0.7, coexistTarget: 8,  fxBonus: false, dropLandingBonus: true  },
+      build_to_build:  { label: '🚀ダブルビルド同期',     enforceDropFinish: false, allowEarlyBuildCut: true,  keyStrictness: 1.3, coexistTarget: 12, fxBonus: false, dropLandingBonus: true  },
+      drop_to_break:   { label: '🎭Drop出し切り→緩急',    enforceDropFinish: true,  allowEarlyBuildCut: false, keyStrictness: 0.9, coexistTarget: 16, fxBonus: true,  dropLandingBonus: false },
+      break_to_groove: { label: '🎤歌/ブレイク乗せ',      enforceDropFinish: false, allowEarlyBuildCut: false, keyStrictness: 1.3, coexistTarget: 20, fxBonus: true,  dropLandingBonus: false },
+      outro_classic:   { label: '🌊アウトロ引き算繋ぎ',   enforceDropFinish: false, allowEarlyBuildCut: false, keyStrictness: 0.8, coexistTarget: 20, fxBonus: true,  dropLandingBonus: false }
+    };
+
+    function classifyTransitionScene(exitType, entryType) {
+      const ex = (exitType || 'GROOVE').toUpperCase();
+      const en = (entryType || 'GROOVE').toUpperCase();
+      if (ex === 'OUTRO') return 'outro_classic';
+      if (ex === 'BUILD') return en === 'BUILD' ? 'build_to_build' : 'build_to_drop';
+      if (ex === 'DROP') {
+        if (en === 'DROP') return 'drop_to_drop';
+        if (en === 'BREAK' || en === 'VOCAL') return 'drop_to_break';
+        return 'drop_to_groove';
+      }
+      if (ex === 'BREAK' || ex === 'VOCAL') return 'break_to_groove';
+      return 'groove_blend';
+    }
+
+    function scoreTransitionFit(score, a1, a2, exit, entry, method, policyOverride = null) {
+      const scoringPolicy = policyOverride || (typeof document !== 'undefined' && document.getElementById('scoring-policy-select')?.value) || 'auto';
+      const sceneId = classifyTransitionScene(exit && exit.type, entry && entry.type);
+      const sceneProfile = SCENE_PROFILES[sceneId] || SCENE_PROFILES.groove_blend;
       const keyCompat = scoreKeyCompatibility(a1.key, a2.key);
       const seq = score.sequence || [];
       const play2Cmd = seq.find(c => c.deck === 2 && c.target === 'PLAY');
@@ -2152,6 +2681,18 @@
       const swapBeat = d2LowUpCmd ? d2LowUpCmd.beat : null;
       let swapLowDropCount = 0, swapDoubleKickCount = 0, swapPostLowSum = 0, swapPostLowCount = 0;
       const landStartBeat = Math.max(play2Beat + 8, maxBeat - 14);
+      const d1DropRanges = (a1.sections || [])
+        .filter(s => s.type === 'DROP' && typeof s.startSec === 'number')
+        .map(s => {
+          const bars = Math.max(4, (s.endBar || s.startBar + 15) - s.startBar + 1);
+          const endSec = s.startSec + bars * (a1.barSec || 1.875);
+          return {
+            start: s.startSec,
+            coreEnd: Math.max(s.startSec + 4 * (a1.barSec || 1.875), endSec - 1.5 * (a1.barSec || 1.875)),
+            end: endSec
+          };
+        });
+      let d1DropKilledBeats = 0, d1EnteredDropBeats = 0;
 
       for (let b = 1; b <= maxBeat; b += 1) {
         const st = computeStateAtBeat(score, b);
@@ -2161,6 +2702,17 @@
         const effBeat1 = l1 ? (l1.startBeat + ((b - l1.startBeat) % l1.len)) : b;
         const t1 = exit.sec + (effBeat1 - 1.0) * secPerBeat1;
         const b1 = sampleBlockAtSec(a1.blocks, t1, a1.duration);
+
+        // 禁止事項チェック: D1がDROP本編に入っている間にFADERやLOWを落として途中消ししていないか
+        if (!l1 && d1DropRanges.length) {
+          const inDrop = d1DropRanges.some(r => t1 >= r.start + 0.5 && t1 < r.coreEnd);
+          if (inDrop) {
+            d1EnteredDropBeats++;
+            if (st[1].FADER < 0.55 || st[1].EQ_LOW < 0.45) {
+              d1DropKilledBeats++;
+            }
+          }
+        }
 
         // Deck 2 の曲内時刻（PLAY前・曲末超過は無音）
         let b2 = { low: 0, mid: 0, high: 0, energy: 0 };
@@ -2267,181 +2819,121 @@
       }
       const isInteractive = hasCallback || lowReturned;
 
-      // === DJ Carlo Atendido の「美しいミックス5原則」に基づく4軸採点 (各0-25点, 計最大99点) ===
-
-      // 1. 空間の引き算＆共存の豊かさ（2曲がしっかり共存して1つの音楽になっているか + 戻り・掛け合い評価: 0-25点）
-      let spaceScore = 4;
-      if (hybridBeats >= 48) spaceScore = 22;
-      else if (hybridBeats >= 32) spaceScore = 20;
-      else if (hybridBeats >= 20) spaceScore = 15;
-      else if (hybridBeats >= 12) spaceScore = 9;
-      // 適度なMid共存(2%〜28%)は豊かなハイブリッド・グルーヴとして高評価。極端な正面衝突(>30%)や瞬間ボーカル被りピークのみ減点
-      if (avgMidClash >= 0.02 && avgMidClash <= 0.28) spaceScore += 3;
-      else if (avgMidClash < 0.01) spaceScore -= 5;
-      else if (avgMidClash > 0.30) spaceScore -= Math.min(8, Math.round((avgMidClash - 0.30) * 45));
-      if (midClashPeaks >= 6) spaceScore -= Math.min(5, midClashPeaks - 5);
-      if (isInteractive) spaceScore += 3;
-      spaceScore = Math.max(1, Math.min(25, spaceScore));
-
-      // 2. 1バスライン原則＆Swap前後4拍バトンタッチ品質＆エネルギー連続性 (0-25点)
-      let bassScore = 16;
-      if (startE < 0.35) bassScore -= 7; // 出だしがスカスカ
-      if (landE >= 0.55) bassScore += 4; // スワップ後の着地が力強く開花
-      else if (landE < 0.35) bassScore -= 8; // つなぎ先がスカスカで腰砕け
-      const swapPostLow = swapPostLowCount > 0 ? (swapPostLowSum / swapPostLowCount) : 0.5;
-      if (swapBeat !== null) {
-        if (swapLowDropCount === 0 && swapDoubleKickCount === 0 && swapPostLow >= 0.50) bassScore += 5;
-        else {
-          if (swapLowDropCount >= 2) bassScore -= 4;
-          if (swapDoubleKickCount >= 2) bassScore -= 4;
-        }
-      } else {
-        bassScore += 1;
-      }
-      bassScore -= Math.round((100 - lowKeepPct) * 0.4);
-      // 操作後の自然なベースクロスは許容し、両方全開で放置された強い被り(>0.22)のみ減点
-      if (avgLowClash > 0.22) bassScore -= Math.round((avgLowClash - 0.22) * 40);
-      if (lowClashPeaks > 4) bassScore -= Math.min(6, (lowClashPeaks - 4) * 2);
-      bassScore = Math.max(1, Math.min(25, bassScore));
-
-      // 3. 滑らかさ＆FX余韻＆Tension-Release落差 (0-25点)
-      let fxScore = 20;
-      fxScore -= silenceBeats * 5;
-      fxScore -= muteBeats * 12;
-      fxScore -= Math.min(9, jumpCount * 3);
-      if (maxJump > 0.35) fxScore -= 3;
-      if (fxAudibleBeats >= 3) fxScore += 3;
-      else if (fxAudibleBeats === 0) fxScore -= 3;
-      if (silenceBeats === 0 && muteBeats === 0 && landE >= 0.55 && releaseLift >= 0.06) fxScore += 2;
-      fxScore = Math.max(0, Math.min(25, fxScore));
-
-      // 4. フレーズ整合＆Key調和＆D2入口MID相性 (0-25点)
-      let phraseKeyScore = 8;
-      const isDistantKey = keyCompat.distance !== null && keyCompat.distance >= 2;
+      // === 新・ゼロベース2段階採点（第1段階: 共通3大NG減点 / 第2段階: シーン専用100点評価） ===
       const isStrictClashKey = keyCompat.distance !== null && keyCompat.distance >= 3;
-      const isDrumOrShortSafe = ['house_drum_layer', 'house_echo_wash_out', 'house_loop_roll_drop', 'house_d1_outro_loop', 'house_quick_drop_cut'].includes(method.id)
-        || (avgMidClash <= 0.07 && (exit.type === 'OUTRO' || exit.type === 'BREAK' || (entry.label && (entry.label.includes('イントロ') || entry.label.includes('ビート')))));
-
-      if (keyCompat.score >= 0.9) phraseKeyScore += 7;
-      else if (isStrictClashKey) {
-        phraseKeyScore += isDrumOrShortSafe ? 3 : -6;
-      } else if (isDistantKey) {
-        phraseKeyScore += isDrumOrShortSafe ? 5 : 1;
-      } else {
-        phraseKeyScore += 4;
-      }
-      const ratio = exit.sec / Math.max(1, a1.duration);
-      if (exit.type === 'DROP' || exit.type === 'GROOVE' || exit.type === 'BREAK' || ratio >= 0.50) phraseKeyScore += 2;
-
-      const isLongBlendMethod = [
-        'house_32bar_classic_a', 'house_hybrid_plateau', 'house_vocal_call_response',
-        'house_d1_drop_to_d2_drop', 'house_lpf_bass_stay', 'house_break_acappella_bridge',
-        'house_32bar_seamless', 'house_16bar_eq_swap', 'house_cross_filter',
-        'house_lpf_warm_blend', 'house_filter_echo_glide', 'house_d2_loop_extend'
-      ].includes(method.id);
       const isImpactDropMethod = [
         'house_echo_freeze_loop', 'house_quick_drop_cut', 'house_echo_wash_out',
         'house_loop_roll_drop', 'house_d1_outro_loop', 'house_callback_return', 'house_pingpong_bass_swap'
       ].includes(method.id);
+      const isDrumOrShortSafe = ['house_drum_layer', 'house_echo_wash_out', 'house_loop_roll_drop', 'house_d1_outro_loop', 'house_quick_drop_cut'].includes(method.id)
+        || (avgMidClash <= 0.07 && (exit.type === 'OUTRO' || exit.type === 'BREAK' || (entry.label && (entry.label.includes('イントロ') || entry.label.includes('ビート')))));
 
-      // D2の入り際（最初16拍）のボーカル/メロディ密度と「D2初期MID設定」の相性照合
-      const d2InEnergy = d2InCount > 0 ? (d2InEnergySum / d2InCount) : 0.5;
-      const d2InLow = d2InCount > 0 ? (d2InLowSum / d2InCount) : 0.5;
-      const d2InMid = d2InCount > 0 ? (d2InMidSum / d2InCount) : 0.5;
-      const d2InHigh = d2InCount > 0 ? (d2InHighSum / d2InCount) : 0.5;
-      const initD2Mid = Number((score.initial_state && score.initial_state.deck2 && score.initial_state.deck2.mid) ?? 0.5);
-      if (d2InMid >= 0.65) {
-        if (initD2Mid <= 0.45) phraseKeyScore += 2;
-        else if (initD2Mid >= 0.70) phraseKeyScore -= 3;
-      } else if (d2InMid <= 0.45 && d2InLow >= 0.45 && isLongBlendMethod) {
-        phraseKeyScore += 1;
-      }
-
-      // キーが大きく離れている(>=3)のに長尺ロングブレンドやMID重ね(avgMidClash > 0.08)を行う場合は厳禁ペナルティ
-      let keyMidClashWarn = false;
-      if (isStrictClashKey && (isLongBlendMethod && avgMidClash > 0.08)) {
-        spaceScore = Math.max(1, spaceScore - 6);
-        phraseKeyScore -= 4;
-        keyMidClashWarn = true;
-      }
-
-      if (isLongBlendMethod) {
-        if ((d2InHigh >= 0.30 || d2InEnergy >= 0.34) && d2InMid <= 0.72) phraseKeyScore += 3;
-        else if (d2InEnergy < 0.24 || d2InMid > 0.78) phraseKeyScore -= 5;
-      } else if (isImpactDropMethod) {
-        if (landE >= 0.58) phraseKeyScore += 4;
-        else if (landE < 0.45) phraseKeyScore -= 4;
-      }
-
+      const hasD2LoopHold = seq.some(c => c.deck === 2 && c.target === 'LOOP' && Number(c.value) > 0);
       const d2FirstMain = (a2.sections || []).find(s => s.type === 'DROP') || (a2.sections || []).find(s => s.type === 'GROOVE' && s.startBar >= 17);
+      let anchorDiff = 0;
       if (d2FirstMain && entry.barNum) {
-        const barsToMain = d2FirstMain.startBar - entry.barNum;
-        const d2TargetBeats = barsToMain * 4;
+        const d2TargetBeats = (d2FirstMain.startBar - entry.barNum) * 4;
         const d2LowUpCmd = seq.find(c => c.deck === 2 && c.target === 'EQ_LOW' && Number(c.value) >= 0.8);
         const methodSpanBeats = d2LowUpCmd ? (d2LowUpCmd.beat - play2Beat) : Math.max(16, maxBeat - 16 - play2Beat);
-        const anchorDiff = Math.abs(methodSpanBeats - d2TargetBeats);
-        if (anchorDiff <= 8) phraseKeyScore += 3; // 着地シンクロ（Phrase Anchor Sync）
-        else if (anchorDiff > 24 && barsToMain >= 4) phraseKeyScore -= 2;
-
-        if ((method.id === 'house_32bar_classic_a' || method.id === 'house_32bar_seamless') && barsToMain >= 16 && barsToMain <= 36) phraseKeyScore += 2;
-        else if (['house_16bar_eq_swap', 'house_cross_filter', 'house_lpf_warm_blend', 'house_filter_echo_glide', 'house_d2_loop_extend'].includes(method.id) && barsToMain >= 8 && barsToMain <= 20) phraseKeyScore += 2;
-        else if (isImpactDropMethod && barsToMain >= 4 && barsToMain <= 16) phraseKeyScore += 2;
-      } else if (entry.label && (entry.label.includes('DROP') || entry.label.includes('イントロ') || entry.label.includes('ビート'))) {
-        phraseKeyScore += 2;
+        anchorDiff = Math.abs(methodSpanBeats - d2TargetBeats);
       }
 
-      // BPM差に応じた手法適性（大差時は短尺・Echo・ブレイク抜けを推奨）
+      const d2EntryRatio = (a2.duration > 0 && typeof entry.sec === 'number') ? (entry.sec / a2.duration) : 0.1;
+      const isEarlyD2 = d2EntryRatio <= 0.30 || (entry.barNum && entry.barNum <= 25);
+      const isLateD2 = d2EntryRatio > 0.45;
       const bpmDiff = Math.abs((a1.bpm || 128) - (a2.bpm || 128));
-      if (bpmDiff <= 1.5 && isLongBlendMethod) phraseKeyScore += 1;
-      else if (bpmDiff >= 3.0) {
-        phraseKeyScore += isLongBlendMethod ? -4 : 2;
-      }
+      const dipThreshold = Math.max(0.30, startE * 0.60);
+      const dipBeats = totalEHistory.filter(e => e < dipThreshold).length;
+      const isBuildToDrop = (exit.type === 'BUILD') && (entry.type === 'DROP' || isImpactDropMethod || landE >= 0.60);
+      const isBreakOrOutroExit = (exit.type === 'BREAK' || exit.type === 'OUTRO');
+      const useAutoScene = (scoringPolicy === 'auto');
+      const exemptEarlyCut = useAutoScene
+        ? sceneProfile.allowEarlyBuildCut
+        : (scoringPolicy === 'drop_swap' && isBuildToDrop);
 
-      // 曲の象徴（1st DROP）を消化してから抜けるかの判定
+      // --- 第1段階: 共通3大NG（全シーン共通） ---
+      const lowPenalty =
+        (avgLowClash > 0.14 ? Math.min(28, Math.round((avgLowClash - 0.14) * 90)) : 0) +
+        (lowClashPeaks > 2 ? Math.min(12, (lowClashPeaks - 2) * 3) : 0);
+      const mutePenalty = muteBeats > 0 ? (35 + muteBeats * 8)
+        : (silenceBeats >= 3 ? silenceBeats * 6 : (dipBeats >= 4 ? (dipBeats - 2) * 4 : 0));
+      const d1DropKilled = d1DropKilledBeats >= 2 && !exemptEarlyCut;
+      const dropKillPenalty = d1DropKilled ? 32 : 0;
+
       const d1FirstDrop = (a1.sections || []).find(s => s.type === 'DROP');
       let d1IconMissed = false;
       if (d1FirstDrop && typeof d1FirstDrop.startSec === 'number') {
-        const dropBars = Math.max(4, (d1FirstDrop.endBar || d1FirstDrop.startBar + 15) - d1FirstDrop.startBar + 1);
-        const dropMidSec = d1FirstDrop.startSec + Math.min(8, Math.floor(dropBars / 2)) * (a1.barSec || 1.875);
-        if (exit.sec < d1FirstDrop.startSec - 1.0) {
+        if (exit.sec < d1FirstDrop.startSec - 1.0 && !exemptEarlyCut) {
           d1IconMissed = true;
-          phraseKeyScore -= 7;
-        } else if (exit.sec >= dropMidSec - 1.0 || exit.type === 'DROP') {
-          phraseKeyScore += 2;
         }
       }
-      phraseKeyScore = Math.max(1, Math.min(25, phraseKeyScore));
 
-      // 開始エネルギー基準でミックス途中に音量が消えて痩せていく(dipBeats)現象を検知
-      const dipThreshold = Math.max(0.30, startE * 0.60);
-      const dipBeats = totalEHistory.filter(e => e < dipThreshold).length;
+      // --- 第2段階: シーン専用 100点評価（やりたいことができた度） ---
+      let sceneScore = 70;
+      let spaceScore = 18, bassScore = 18, fxScore = 18, phraseKeyScore = 18;
 
-      // 両方の曲が消えて無音(muteBeats)、極端な音切れ(silenceBeats >= 3)、または途中の音痩せ(dipBeats >= 4)を厳しく減点
-      let rawTotal = spaceScore + bassScore + fxScore + phraseKeyScore;
-      if (bpmDiff >= 3.0 && isLongBlendMethod) rawTotal -= 5;
-      else if (bpmDiff >= 3.0 && !isLongBlendMethod) rawTotal += 2;
-      if (d1IconMissed) rawTotal -= 6;
-      if (hybridBeats < 16 && bpmDiff < 3.0 && !isStrictClashKey) rawTotal -= 5; // 2曲同時共存が短すぎる案を抑制
-      if (muteBeats > 0) rawTotal = Math.min(42, rawTotal - 32 - muteBeats * 8);
-      else if (silenceBeats >= 3) rawTotal = Math.min(54, rawTotal - silenceBeats * 5);
-      else if (dipBeats >= 4) rawTotal = Math.min(62, rawTotal - (dipBeats - 2) * 3);
+      if (sceneId === 'build_to_drop' || sceneId === 'build_to_build' || (!useAutoScene && scoringPolicy === 'drop_swap' && isBuildToDrop)) {
+        const tensionPts = Math.min(36, Math.round(landE * 38) + (releaseLift >= 0.08 ? 8 : 0));
+        const syncPts = (bpmDiff <= 1.5 ? 16 : 8) + ((anchorDiff <= 8 || hasD2LoopHold) ? 14 : 6);
+        const keyPts = Math.round(keyCompat.score * (sceneId === 'build_to_build' ? 28 : 20)) + (sceneId === 'build_to_drop' ? 4 : 0);
+        sceneScore = Math.min(92, tensionPts + syncPts + keyPts);
+        spaceScore = Math.min(25, Math.round(syncPts * 0.8));
+        bassScore = Math.min(25, Math.round(tensionPts * 0.65));
+        fxScore = Math.min(25, Math.max(8, 22 - Math.min(12, jumpCount * 3)));
+        phraseKeyScore = Math.min(25, Math.round(keyPts * 0.85));
+      } else if (sceneId === 'drop_to_break' || sceneId === 'break_to_groove' || (!useAutoScene && scoringPolicy === 'echo_break' && isBreakOrOutroExit)) {
+        const fxSmoothPts = (fxAudibleBeats >= 3 ? 22 : 12) + Math.max(0, 16 - Math.min(16, jumpCount * 3));
+        const harmPts = Math.round(keyCompat.score * 22) + (avgMidClash >= 0.02 && avgMidClash <= 0.55 ? 12 : 6);
+        const flowPts = Math.min(16, Math.round(hybridBeats * 0.55)) + (d1EnteredDropBeats >= 4 ? 8 : 4);
+        sceneScore = Math.min(94, fxSmoothPts + harmPts + flowPts);
+        spaceScore = Math.min(25, Math.round(flowPts + 6));
+        bassScore = Math.min(25, Math.max(8, 22 - Math.round(lowPenalty * 0.6)));
+        fxScore = Math.min(25, Math.round(fxSmoothPts * 0.65));
+        phraseKeyScore = Math.min(25, Math.round(harmPts * 0.72));
+      } else {
+        const targetH = Math.max(16, sceneProfile.coexistTarget || 24);
+        const coexistPts = Math.min(34, Math.round((hybridBeats / targetH) * 28)) + (hasD2LoopHold && hybridBeats >= 24 ? 6 : 0);
+        const smoothPts = Math.max(6, 26 - Math.min(10, jumpCount * 3) - (swapLowDropCount >= 2 ? 6 : 0) - (lowKeepPct < 90 ? Math.round((90 - lowKeepPct) * 0.4) : 0));
+        const timingPts = Math.round(keyCompat.score * 12) + (isEarlyD2 ? 9 : (isLateD2 ? 0 : 4)) + (d1EnteredDropBeats >= 4 ? 5 : 0);
+        const midPts = (avgMidClash >= 0.02 && avgMidClash <= 0.60 ? 11 : 6) + (isInteractive ? 4 : 2);
+        sceneScore = Math.min(98, coexistPts + smoothPts + timingPts + midPts);
+        spaceScore = Math.min(25, Math.round((coexistPts + midPts) * 0.52));
+        bassScore = Math.min(25, Math.max(4, Math.round(smoothPts * 0.9) - Math.round(lowPenalty * 0.5)));
+        fxScore = Math.min(25, Math.max(6, 22 - Math.min(12, jumpCount * 3) + (fxAudibleBeats >= 3 ? 2 : 0)));
+        phraseKeyScore = Math.min(25, Math.round(timingPts));
+      }
+
+      if (d1IconMissed) sceneScore -= 12;
+      let rawTotal = sceneScore - lowPenalty - mutePenalty - dropKillPenalty;
+      if (d1DropKilled) rawTotal = Math.min(48, rawTotal);
+      if (muteBeats > 0) rawTotal = Math.min(42, rawTotal);
+      else if (silenceBeats >= 3) rawTotal = Math.min(54, rawTotal);
+      else if (dipBeats >= 4) rawTotal = Math.min(62, rawTotal);
 
       const fitScore = Math.max(5, Math.min(99, rawTotal));
       const bpmTag = bpmDiff >= 2.5 ? ` | BPM差${bpmDiff.toFixed(1)}` : '';
+      const keyMidClashWarn = isStrictClashKey && avgMidClash > 0.48 && !hasD2LoopHold;
+      const sceneTag = useAutoScene
+        ? ` | ${sceneProfile.label}`
+        : ((scoringPolicy === 'drop_swap' && isBuildToDrop) ? ' | ⚡ビルド→Drop切替'
+        : ((scoringPolicy === 'echo_break' && isBreakOrOutroExit) ? ' | 🌊余韻ブレイク繋ぎ'
+        : (d1EnteredDropBeats >= 4 ? ' | ✅D1 Drop流し切り'
+        : (isInteractive ? ' | 🤝戻り掛け合い' : ''))));
       const warnTag = muteBeats > 0 ? ` | ⚠無音${muteBeats}拍`
+        : (d1DropKilled ? ` | ⚠禁止:D1 Drop途中消し(${d1DropKilledBeats}拍)`
         : (dipBeats >= 4 ? ` | ⚠音消${dipBeats}拍`
         : (silenceBeats > 0 ? ` | ⚠音薄${silenceBeats}拍`
         : (d1IconMissed ? ` | ⚠D1象徴(1stDrop)未通過`
-        : (keyMidClashWarn ? ` | ⚠Key離(MIDカット推奨)`
-        : (midClashPeaks >= 6 ? ` | ⚠Mid正面衝突${midClashPeaks}拍`
-        : (isInteractive ? ' | 🤝戻り掛け合い' : ''))))));
+        : ((lowClashPeaks >= 4 || avgLowClash > 0.22) ? ` | ⚠LOW被り${lowClashPct}%`
+        : (keyMidClashWarn ? ` | ⚠Key離(MID調整推奨)`
+        : (hasD2LoopHold ? ' | 🔁2曲同時ループ並走' : sceneTag)))))));
       const reason = `${keyCompat.label}${bpmTag} | 共存${hybridBeats}拍・着地${Math.round(landE*100)}% | 低音${lowKeepPct}%(被り${lowClashPct}%) | M${midClashPct}%${warnTag}`;
 
       return {
         fitScore,
         breakdown: { spaceScore, bassScore, fxScore, phraseKeyScore },
         reason,
-        meta: { keyCompat, avgMidClash, midClashPct, lowKeepPct, lowClashPct, hybridBeats, isInteractive, isDrumOrShortSafe }
+        meta: { keyCompat, avgMidClash, midClashPct, lowKeepPct, lowClashPct, hybridBeats, isInteractive, isDrumOrShortSafe, sceneId }
       };
     }
 
@@ -2492,15 +2984,21 @@
       if (d1Drops[0]) {
         const d = d1Drops[0];
         const bars = d.endBar - d.startBar + 1;
-        addExit(d, d.startSec + Math.max(0, bars - 8) * a1.barSec, '1st DROP終盤');
+        const dropEndSec = d.startSec + bars * a1.barSec;
+        addExit(d, Math.max(d.startSec, dropEndSec - 4 * a1.barSec), '1st DROP流し切り');
       }
       if (d1Drops.length >= 2) {
         const d = d1Drops[d1Drops.length - 1];
         const bars = d.endBar - d.startBar + 1;
-        addExit(d, d.startSec + Math.max(0, bars - 8) * a1.barSec, '終盤 DROP後');
+        const dropEndSec = d.startSec + bars * a1.barSec;
+        addExit(d, Math.max(d.startSec, dropEndSec - 4 * a1.barSec), '終盤 DROP流し切り');
       }
       const d1GrooveLate = s1.filter(s => s.type === 'GROOVE' && s.startSec > a1.duration * 0.45).pop();
       if (d1GrooveLate) addExit(d1GrooveLate, d1GrooveLate.startSec, '後半 GROOVE');
+      const d1Builds = s1.filter(s => s.type === 'BUILD');
+      if (d1Builds.length) {
+        addExit(d1Builds[0], d1Builds[0].startSec, 'BUILD→Drop切替');
+      }
       const d1Breaks = s1.filter(s => s.type === 'BREAK' && s.startSec >= a1.firstDownbeat + 16 * a1.barSec);
       if (d1Breaks.length) {
         const brk = d1Breaks[d1Breaks.length - 1];
@@ -2521,15 +3019,16 @@
       const rawEntries = [];
       const addEntry = (secObj, customSec, labelPrefix) => {
         const { sec, barNum } = snapToPhrase(a2, customSec, 24);
+        const actualSecObj = s2.slice().reverse().find(s => s.startSec <= sec + 1.0) || secObj;
         if (!rawEntries.some(e => Math.abs(e.sec - sec) < 6.0)) {
           rawEntries.push({
-            type: secObj ? secObj.type : 'GROOVE',
+            type: actualSecObj ? actualSecObj.type : 'GROOVE',
             sec,
             barNum,
             label: `Bar${barNum} ${labelPrefix} (${formatTimeMinSec(sec)})`,
-            avgLow: (secObj && secObj.avgLow) || 0.5,
-            avgMid: (secObj && secObj.avgMid) || 0.5,
-            avgHigh: (secObj && secObj.avgHigh) || 0.5
+            avgLow: (actualSecObj && actualSecObj.avgLow) || 0.5,
+            avgMid: (actualSecObj && actualSecObj.avgMid) || 0.5,
+            avgHigh: (actualSecObj && actualSecObj.avgHigh) || 0.5
           });
         }
       };
@@ -2566,6 +3065,7 @@
       // 3. ハウス・4つ打ち特化手法（20種類：王道パターンA + 象徴保護・共存・掛け合い + Carlo王道 + Lilianショート動画テク）
       const methods = [
         { id: 'house_32bar_classic_a', label: '★王道32小節 パターンA', focusBeat: 57.0 },
+        { id: 'house_d2_loop_simultaneous', label: '★2曲ほぼ同時再生・D2ループ並走', focusBeat: 41.0 },
         { id: 'house_hybrid_plateau', label: '★長時間・共存ハイブリッド', focusBeat: 33.0 },
         { id: 'house_vocal_call_response', label: '★象徴シーソー・交互ボーカル/リフ', focusBeat: 33.0 },
         { id: 'house_d1_drop_to_d2_drop', label: '★1stDropリレー・バトンタッチ', focusBeat: 33.0 },
@@ -2626,13 +3126,42 @@
       });
 
       candidates.sort((a, b) => b.fitScore - a.fitScore);
-      transitionCandidates = candidates;
+      const scoringPolicyNow = document.getElementById('scoring-policy-select')?.value || 'auto';
+      if (scoringPolicyNow === 'auto' && candidates.length > 6) {
+        // シーンごとの代表（1位・2位…）をバランスよく上位へ並べて1シーン独占を防ぐ
+        const buckets = new Map();
+        for (const cand of candidates) {
+          const sid = (cand.fitMeta && cand.fitMeta.sceneId) || 'other';
+          if (!buckets.has(sid)) buckets.set(sid, []);
+          buckets.get(sid).push(cand);
+        }
+        const interleaved = [];
+        let tier = 0;
+        let added = true;
+        while (added) {
+          added = false;
+          const tierItems = [];
+          for (const arr of buckets.values()) {
+            if (tier < arr.length) {
+              tierItems.push(arr[tier]);
+              added = true;
+            }
+          }
+          tierItems.sort((a, b) => b.fitScore - a.fitScore);
+          interleaved.push(...tierItems);
+          tier++;
+        }
+        transitionCandidates = interleaved;
+      } else {
+        transitionCandidates = candidates;
+      }
       activeCandidateIndex = 0;
       renderTransitionCandidates();
       updateLearningSummary();
       if (candidates.length > 0) {
         applyCandidatePlan(0, false);
       }
+      rankParallelPositions(false);
     }
 
     function toggleKeepCandidate(uid, ev) {
@@ -2815,6 +3344,242 @@
       }).join('');
     }
 
+    function applySimpleParallelMix(autoPlay = false) {
+      const a1 = deckAnalysis[1];
+      const a2 = deckAnalysis[2];
+      if (!a1 || !a2) {
+        if (autoPlay) alert('先に Deck 1 と Deck 2 の両方に曲を読み込んでください。');
+        return null;
+      }
+
+      const masterBpm = a1.bpm || a2.bpm || 128.0;
+      const bpm1 = a1.bpm || masterBpm;
+      const bpm2 = a2.bpm || masterBpm;
+      const outSec = Number((a1.recommendedOutSec ?? a1.firstDownbeat ?? 0).toFixed(3));
+      const inSec = Number((a2.recommendedInSec ?? a2.firstDownbeat ?? 0).toFixed(3));
+
+      const spanBeats = Number(document.getElementById('par-span-beats')?.value || 64);
+      const d2LoopBeats = Number(document.getElementById('par-d2-loop')?.value || 0);
+      const lowMode = document.getElementById('par-low-mode')?.value || 'swap';
+      const midMode = document.getElementById('par-mid-mode')?.value || 'both';
+      const d1EndMode = document.getElementById('par-d1-end')?.value || 'fade';
+
+      const d1MidInit = midMode === 'tuck1' ? 0.75 : 1.0;
+      const d2MidInit = midMode === 'tuck2' ? 0.75 : 0.95;
+      const d1LowInit = lowMode === 'd2' ? 0.0 : 1.0;
+      const d2LowInit = lowMode === 'd2' ? 1.0 : 0.0;
+
+      const seq = [
+        { beat: 1.0, deck: 1, target: 'PLAY', action: 'cut', offset_sec: outSec, source_bpm: bpm1 },
+        { beat: 1.0, deck: 2, target: 'PLAY', action: 'cut', offset_sec: inSec, source_bpm: bpm2 },
+        { beat: 1.0, deck: 2, target: 'FADER', value: 0.92, action: 'ramp', duration_beats: 8 }
+      ];
+
+      if (d2LoopBeats > 0) {
+        seq.push({ beat: 1.0, deck: 2, target: 'LOOP', value: d2LoopBeats, action: 'cut' });
+      }
+
+      const midBeat = Math.max(17.0, Math.round((spanBeats * 0.5) / 4) * 4 + 1);
+      if (d2LoopBeats > 0) {
+        seq.push({ beat: midBeat, deck: 2, target: 'LOOP', value: 0, action: 'cut' });
+      }
+      if (lowMode === 'swap') {
+        seq.push({ beat: midBeat, deck: 1, target: 'EQ_LOW', value: 0.0, action: 'ramp', duration_beats: 4 });
+        seq.push({ beat: midBeat, deck: 2, target: 'EQ_LOW', value: 1.0, action: 'ramp', duration_beats: 4 });
+      }
+      seq.push({ beat: midBeat, deck: 2, target: 'FADER', value: 1.0, action: 'ramp', duration_beats: 4 });
+
+      const endStartBeat = Math.max(midBeat + 12, spanBeats - 15);
+      if (d1EndMode === 'fade') {
+        seq.push({ beat: endStartBeat, deck: 1, target: 'FADER', value: 0.0, action: 'ramp', duration_beats: 24 });
+      } else if (d1EndMode === 'echo') {
+        seq.push({ beat: endStartBeat, deck: 1, target: 'BEAT_FX', value: 0.78, action: 'ramp', duration_beats: 6 });
+        seq.push({ beat: endStartBeat, deck: 1, target: 'FILTER', value: 0.45, action: 'ramp', duration_beats: 24 });
+        seq.push({ beat: endStartBeat, deck: 1, target: 'FADER', value: 0.0, action: 'ramp', duration_beats: 24 });
+        seq.push({ beat: endStartBeat + 28, deck: 1, target: 'BEAT_FX', value: 'OFF', action: 'cut' });
+      }
+
+      seq.sort((a, b) => a.beat - b.beat);
+      const score = {
+        routine_name: `シンプル並走 (${spanBeats}拍)`,
+        description: `Beat 1から同時再生 (${spanBeats}拍) | LOW:${lowMode} / MID:${midMode} / 最後:${d1EndMode}`,
+        bpm: masterBpm,
+        initial_state: {
+          deck1: { fader: 1.0, low: d1LowInit, mid: d1MidInit, high: 1.0, filter: 0.0, drums: true, vocal: true, inst: true },
+          deck2: { fader: 0.0, low: d2LowInit, mid: d2MidInit, high: 0.95, filter: 0.0, drums: true, vocal: true, inst: true }
+        },
+        sequence: seq
+      };
+
+      document.getElementById('score-json').value = JSON.stringify(score, null, 2);
+      document.getElementById('preset-desc').innerText = score.description;
+      document.getElementById('master-bpm-display').innerText = masterBpm.toFixed(1);
+      renderStandbySetup(score.initial_state);
+      renderSequenceTable(score.sequence, score.bpm);
+      renderFxSetupSummary(score);
+      abstractBaseScore = JSON.parse(JSON.stringify(score));
+      const puzzlePanel = document.getElementById('puzzle-editor-panel');
+      if (puzzlePanel && !puzzlePanel.classList.contains('hidden')) {
+        loadCurrentScoreToPuzzle();
+      }
+
+      const sumEl = document.getElementById('parallel-studio-summary');
+      if (sumEl) {
+        sumEl.innerText = `D1(${formatTimeMinSec(outSec)}) × D2(${formatTimeMinSec(inSec)}) を Beat 1 から同時並走 | 折返 B${midBeat} (${lowMode === 'swap' ? 'LOW入替' : 'LOW固定'})`;
+      }
+
+      if (autoPlay) {
+        stopPreview();
+        if (isPlaying) stopPerformance();
+        const startBeatInput = document.getElementById('start-beat-input');
+        if (startBeatInput) startBeatInput.value = 1.0;
+        setTimeout(() => startPerformance(1.0), 80);
+      }
+      return score;
+    }
+
+    let parallelSpotCandidates = [];
+
+    function buildParallelScoreObject(a1, a2, outSec, inSec) {
+      const masterBpm = a1.bpm || a2.bpm || 128.0;
+      const bpm1 = a1.bpm || masterBpm;
+      const bpm2 = a2.bpm || masterBpm;
+      const spanBeats = Number(document.getElementById('par-span-beats')?.value || 64);
+      const d2LoopBeats = Number(document.getElementById('par-d2-loop')?.value || 0);
+      const lowMode = document.getElementById('par-low-mode')?.value || 'swap';
+      const midMode = document.getElementById('par-mid-mode')?.value || 'both';
+      const d1EndMode = document.getElementById('par-d1-end')?.value || 'fade';
+      const d1MidInit = midMode === 'tuck1' ? 0.75 : 1.0;
+      const d2MidInit = midMode === 'tuck2' ? 0.75 : 0.95;
+      const d1LowInit = lowMode === 'd2' ? 0.0 : 1.0;
+      const d2LowInit = lowMode === 'd2' ? 1.0 : 0.0;
+      const seq = [
+        { beat: 1.0, deck: 1, target: 'PLAY', action: 'cut', offset_sec: outSec, source_bpm: bpm1 },
+        { beat: 1.0, deck: 2, target: 'PLAY', action: 'cut', offset_sec: inSec, source_bpm: bpm2 },
+        { beat: 1.0, deck: 2, target: 'FADER', value: 0.92, action: 'ramp', duration_beats: 8 }
+      ];
+      if (d2LoopBeats > 0) seq.push({ beat: 1.0, deck: 2, target: 'LOOP', value: d2LoopBeats, action: 'cut' });
+      const midBeat = Math.max(17.0, Math.round((spanBeats * 0.5) / 4) * 4 + 1);
+      if (d2LoopBeats > 0) seq.push({ beat: midBeat, deck: 2, target: 'LOOP', value: 0, action: 'cut' });
+      if (lowMode === 'swap') {
+        seq.push({ beat: midBeat, deck: 1, target: 'EQ_LOW', value: 0.0, action: 'ramp', duration_beats: 4 });
+        seq.push({ beat: midBeat, deck: 2, target: 'EQ_LOW', value: 1.0, action: 'ramp', duration_beats: 4 });
+      }
+      seq.push({ beat: midBeat, deck: 2, target: 'FADER', value: 1.0, action: 'ramp', duration_beats: 4 });
+      const endStartBeat = Math.max(midBeat + 12, spanBeats - 15);
+      if (d1EndMode === 'fade') {
+        seq.push({ beat: endStartBeat, deck: 1, target: 'FADER', value: 0.0, action: 'ramp', duration_beats: 24 });
+      } else if (d1EndMode === 'echo') {
+        seq.push({ beat: endStartBeat, deck: 1, target: 'BEAT_FX', value: 0.78, action: 'ramp', duration_beats: 6 });
+        seq.push({ beat: endStartBeat, deck: 1, target: 'FILTER', value: 0.45, action: 'ramp', duration_beats: 24 });
+        seq.push({ beat: endStartBeat, deck: 1, target: 'FADER', value: 0.0, action: 'ramp', duration_beats: 24 });
+        seq.push({ beat: endStartBeat + 28, deck: 1, target: 'BEAT_FX', value: 'OFF', action: 'cut' });
+      }
+      seq.sort((a, b) => a.beat - b.beat);
+      return {
+        routine_name: `シンプル並走 (${spanBeats}拍)`,
+        description: '',
+        bpm: masterBpm,
+        initial_state: {
+          deck1: { fader: 1.0, low: d1LowInit, mid: d1MidInit, high: 1.0, filter: 0.0, drums: true, vocal: true, inst: true },
+          deck2: { fader: 0.0, low: d2LowInit, mid: d2MidInit, high: 0.95, filter: 0.0, drums: true, vocal: true, inst: true }
+        },
+        sequence: seq
+      };
+    }
+
+    function rankParallelPositions(autoApplyTop = false) {
+      const a1 = deckAnalysis[1];
+      const a2 = deckAnalysis[2];
+      const box = document.getElementById('parallel-spot-list');
+      if (!a1 || !a2 || !box) {
+        if (autoApplyTop) alert('先に Deck 1 と Deck 2 の両方に曲を読み込んでください。');
+        return;
+      }
+
+      const snapPhrase = (a, rawSec, margin = 20) => {
+        const pSec = 8 * a.barSec;
+        const idx = Math.max(0, Math.round((rawSec - a.firstDownbeat) / pSec));
+        const maxS = Math.max(a.firstDownbeat, a.duration - margin);
+        let sec = a.firstDownbeat + idx * pSec;
+        while (sec > maxS && sec - pSec >= a.firstDownbeat) sec -= pSec;
+        return { sec: Number(sec.toFixed(3)), barNum: Math.round((sec - a.firstDownbeat) / a.barSec) + 1 };
+      };
+
+      const d1Spots = [];
+      (a1.sections || []).forEach(s => {
+        const bars = (s.endBar - s.startBar + 1);
+        const rawSec = s.type === 'DROP'
+          ? Math.max(s.startSec, s.startSec + Math.max(0, bars - 4) * a1.barSec)
+          : s.startSec;
+        const { sec, barNum } = snapPhrase(a1, rawSec, 24);
+        if (!d1Spots.some(x => Math.abs(x.sec - sec) < 6.0)) {
+          d1Spots.push({ type: s.type, sec, barNum, label: `Bar${barNum} ${s.type}(${formatTimeMinSec(sec)})` });
+        }
+      });
+
+      const d2Spots = [];
+      const addD2 = (secVal, labelPrefix) => {
+        const { sec, barNum } = snapPhrase(a2, secVal, 24);
+        if (!d2Spots.some(x => Math.abs(x.sec - sec) < 6.0)) {
+          const secObj = (a2.sections || []).slice().reverse().find(s => s.startSec <= sec + 1.0) || (a2.sections || [])[0];
+          d2Spots.push({ type: secObj ? secObj.type : 'INTRO', sec, barNum, label: `Bar${barNum} ${labelPrefix}(${formatTimeMinSec(sec)})` });
+        }
+      };
+      addD2(a2.firstDownbeat, 'イントロ');
+      (a2.sections || []).filter(s => s.startSec < a2.duration * 0.55).forEach(s => addD2(s.startSec, s.type));
+
+      const spots = [];
+      d1Spots.forEach(ex => {
+        d2Spots.forEach(en => {
+          const sc = buildParallelScoreObject(a1, a2, ex.sec, en.sec);
+          const fit = scoreTransitionFit(sc, a1, a2, ex, en, { id: 'house_16bar_eq_swap' }, 'auto');
+          spots.push({
+            score: fit.fitScore,
+            reason: fit.reason,
+            outSec: ex.sec,
+            inSec: en.sec,
+            d1Label: ex.label,
+            d2Label: en.label
+          });
+        });
+      });
+
+      spots.sort((a, b) => b.score - a.score);
+      parallelSpotCandidates = spots.slice(0, 5);
+
+      box.innerHTML = parallelSpotCandidates.map((sp, i) => `
+        <div class="flex items-center justify-between gap-1.5 px-2 py-1 rounded bg-inset/90 border border-emerald-500/25 hover:border-emerald-400/60 text-[9px]">
+          <button onclick="selectParallelSpot(${i}, false)" class="flex-1 text-left cursor-pointer truncate">
+            <span class="font-bold text-emerald-300">#${i + 1} ${sp.score}点</span>
+            <span class="text-slate-200">${sp.d1Label} × ${sp.d2Label}</span>
+            <span class="text-slate-400 ml-1">${sp.reason}</span>
+          </button>
+          <button onclick="selectParallelSpot(${i}, true)" class="shrink-0 px-1.5 py-0.5 rounded bg-emerald-600/80 hover:bg-emerald-500 text-white font-bold cursor-pointer">▶</button>
+        </div>
+      `).join('');
+
+      if (autoApplyTop && parallelSpotCandidates.length > 0) {
+        selectParallelSpot(0, false);
+      }
+    }
+
+    function selectParallelSpot(idx, autoPlay = false) {
+      const sp = parallelSpotCandidates[idx];
+      if (!sp) return;
+      if (deckAnalysis[1]) {
+        deckAnalysis[1].recommendedOutSec = sp.outSec;
+        renderStoryMap(1);
+        drawWaveform('d1-wave-canvas', deck1Buffer, 'rgba(56, 189, 248, 0.75)', deckAnalysis[1], 1);
+      }
+      if (deckAnalysis[2]) {
+        deckAnalysis[2].recommendedInSec = sp.inSec;
+        renderStoryMap(2);
+        drawWaveform('d2-wave-canvas', deck2Buffer, 'rgba(244, 63, 94, 0.75)', deckAnalysis[2], 2);
+      }
+      applySimpleParallelMix(autoPlay);
+    }
+
     function applyCandidatePlan(idx, autoPlay = false) {
       const c = transitionCandidates[idx];
       if (!c) return;
@@ -2839,6 +3604,13 @@
       renderSequenceTable(c.score.sequence, c.score.bpm);
       renderBeautyChecklist(c.score, c);
       renderFxSetupSummary(c.score);
+      abstractBaseScore = JSON.parse(JSON.stringify(c.score));
+      twoAxisState = { ...DEFAULT_TWO_AXIS_STATE };
+      renderAbstractDirectorState(c.score, '');
+      const puzzlePanel = document.getElementById('puzzle-editor-panel');
+      if (puzzlePanel && !puzzlePanel.classList.contains('hidden')) {
+        loadCurrentScoreToPuzzle();
+      }
 
       const useFocus = document.getElementById('focus-mixpoint-toggle')?.checked;
       const startBeat = useFocus ? (c.focusBeat || 1.0) : 1.0;
@@ -2863,6 +3635,655 @@
       const p1 = a1 ? `D1 OUT: ${a1.recommendedOutSec.toFixed(1)}s (${a1.bpm} BPM)` : 'D1: 未読込';
       const p2 = a2 ? `D2 IN: ${a2.recommendedInSec.toFixed(1)}s (${a2.bpm} BPM)` : 'D2: 未読込';
       el.innerHTML = `<span class="text-sky-400">${p1}</span> <span class="text-slate-600">|</span> <span class="text-rose-400">${p2}</span>`;
+    }
+
+    // --- 2-Axis DJ Director (When: Timing & Coexistence Span / How Much: Balance & Blend Depth) ---
+    let abstractBaseScore = null;
+    const DEFAULT_TWO_AXIS_STATE = {
+      preBars: 8,
+      postBars: 8,
+      swapShift: 0,
+      d2Presence: 0.85,
+      d1ExitStyle: 'mid_blend',
+      swapDur: 4
+    };
+    let twoAxisState = { ...DEFAULT_TWO_AXIS_STATE };
+
+    function parseTwoAxisPrompt(text) {
+      const s = (text || '').trim();
+      if (!s) return null;
+      const patch = {};
+      if (/16小節前|長め|ロング|伸ば/.test(s)) patch.preBars = 16;
+      else if (/4小節前|短め|タイト/.test(s)) patch.preBars = 4;
+      else if (/8小節前/.test(s)) patch.preBars = 8;
+
+      if (/(?:後|残)[^、。]{0,8}16小節|16小節[^、。]{0,4}残/.test(s)) patch.postBars = 16;
+      else if (/(?:後|残)[^、。]{0,8}4小節|4小節[^、。]{0,4}残/.test(s)) patch.postBars = 4;
+      else if (/(?:後|残)[^、。]{0,8}8小節|8小節[^、。]{0,4}残|しっかり残|もっと残/.test(s)) patch.postBars = 8;
+
+      if (/早め|前倒/.test(s)) patch.swapShift = -8;
+      else if (/遅め|後ろ/.test(s)) patch.swapShift = 8;
+
+      if (/堂々|100|しっかり出|濃/.test(s)) patch.d2Presence = 1;
+      else if (/控え/.test(s)) patch.d2Presence = 0.7;
+
+      if (/echo|エコー|余韻|溶/.test(s.toLowerCase())) patch.d1ExitStyle = 'echo_melt';
+      else if (/hpf|フィルター|浮/.test(s.toLowerCase())) patch.d1ExitStyle = 'hpf_float';
+      else if (/mid|共存|そのまま|残/.test(s.toLowerCase())) patch.d1ExitStyle = 'mid_blend';
+
+      if (/ゆっくり|滑らか|8拍/.test(s)) patch.swapDur = 8;
+      else if (/キレ|スパ|2拍/.test(s)) patch.swapDur = 2;
+
+      return Object.keys(patch).length ? patch : null;
+    }
+
+    function materializeTwoAxisPlan(baseScore, axis) {
+      const score = JSON.parse(JSON.stringify(baseScore));
+      const baseSeq = score.sequence || [];
+      const play1 = baseSeq.find(c => c.deck === 1 && c.target === 'PLAY') || { beat: 1.0, deck: 1, target: 'PLAY', action: 'cut', offset_sec: 0, source_bpm: score.bpm || 128 };
+      const play2 = baseSeq.find(c => c.deck === 2 && c.target === 'PLAY') || { beat: 1.0, deck: 2, target: 'PLAY', action: 'cut', offset_sec: 0, source_bpm: score.bpm || 128 };
+      const p2Beat = Math.max(1.0, Number(play2.beat || 1.0));
+
+      const preBeats = axis.preBars * 4;
+      const postBeats = axis.postBars * 4;
+      const swapBeat = Math.max(p2Beat + 12, p2Beat + preBeats + (axis.swapShift || 0));
+      const swapDur = axis.swapDur || 4;
+      const d2Presence = Number(axis.d2Presence || 0.85);
+
+      // 1) Initial State: YouTube/Pro House Coexistence — LOW cut on D2, MID & HIGH open!
+      score.initial_state = score.initial_state || { deck1: {}, deck2: {} };
+      score.initial_state.deck1 = {
+        ...score.initial_state.deck1,
+        fader: 1.0, low: 1.0, mid: 1.0, high: 1.0, filter: 0.0
+      };
+      score.initial_state.deck2 = {
+        ...score.initial_state.deck2,
+        fader: 0.0,
+        low: 0.0,
+        mid: d2Presence >= 1 ? 0.92 : (d2Presence >= 0.85 ? 0.84 : 0.74),
+        high: d2Presence >= 1 ? 0.96 : 0.88,
+        filter: 0.0
+      };
+
+      // 2) Build clean coexistence sequence around swapBeat
+      const entryRampDur = Math.min(16, Math.max(8, Math.round(preBeats / 2)));
+      const d2MidFullBeat = Math.max(p2Beat + 4, swapBeat - Math.min(16, Math.round(preBeats / 2)));
+      const d1FadeStart = swapBeat + Math.max(8, Math.round((postBeats * 0.4) / 4) * 4);
+      const d1FadeEnd = swapBeat + postBeats;
+      const d1FadeDur = Math.max(8, d1FadeEnd - d1FadeStart);
+
+      const newSeq = [
+        { ...play1 },
+        { ...play2 },
+        // Phase A (Swap前): LOWカットのまま FADER + MID + HIGH で2曲を共存させる
+        { beat: p2Beat, deck: 2, target: 'FADER', value: d2Presence, action: 'ramp', duration_beats: entryRampDur },
+        { beat: d2MidFullBeat, deck: 2, target: 'EQ_MID', value: 1.0, action: 'ramp', duration_beats: 8 },
+        { beat: d2MidFullBeat, deck: 2, target: 'EQ_HIGH', value: 1.0, action: 'ramp', duration_beats: 8 },
+        // Phase B (Drop/節目): Bass Swap (LOW入替) + D2 Fader 100%
+        { beat: swapBeat, deck: 1, target: 'EQ_LOW', value: 0.0, action: 'ramp', duration_beats: swapDur },
+        { beat: swapBeat, deck: 2, target: 'EQ_LOW', value: 1.0, action: 'ramp', duration_beats: swapDur }
+      ];
+      if (d2Presence < 1.0) {
+        newSeq.push({ beat: swapBeat, deck: 2, target: 'FADER', value: 1.0, action: 'ramp', duration_beats: Math.max(4, swapDur) });
+      }
+
+      // Phase C (Swap後): ぶつ切りを防ぐため、D1をすぐ切らずに共存させながら溶かす
+      if (axis.d1ExitStyle === 'echo_melt') {
+        newSeq.push({ beat: swapBeat + 4, deck: 1, target: 'EQ_MID', value: 0.72, action: 'ramp', duration_beats: 12 });
+        newSeq.push({ beat: d1FadeStart, deck: 1, target: 'BEAT_FX', value: 0.76, action: 'ramp', duration_beats: 6 });
+        newSeq.push({ beat: d1FadeStart, deck: 1, target: 'FILTER', value: 0.42, action: 'ramp', duration_beats: d1FadeDur });
+        newSeq.push({ beat: d1FadeStart, deck: 1, target: 'FADER', value: 0.0, action: 'ramp', duration_beats: d1FadeDur });
+        newSeq.push({ beat: d1FadeEnd + 4, deck: 1, target: 'BEAT_FX', value: 'OFF', action: 'cut' });
+      } else if (axis.d1ExitStyle === 'hpf_float') {
+        newSeq.push({ beat: swapBeat + 4, deck: 1, target: 'FILTER', value: 0.48, action: 'ramp', duration_beats: Math.max(8, postBeats - 4) });
+        newSeq.push({ beat: d1FadeStart, deck: 1, target: 'EQ_MID', value: 0.76, action: 'ramp', duration_beats: 12 });
+        newSeq.push({ beat: d1FadeStart, deck: 1, target: 'FADER', value: 0.0, action: 'ramp', duration_beats: d1FadeDur });
+      } else {
+        // mid_blend: MIDを残したままゆっくりフェード
+        newSeq.push({ beat: swapBeat + 4, deck: 1, target: 'EQ_MID', value: 0.70, action: 'ramp', duration_beats: Math.max(12, Math.round(postBeats * 0.5)) });
+        newSeq.push({ beat: d1FadeStart, deck: 1, target: 'FADER', value: 0.0, action: 'ramp', duration_beats: d1FadeDur });
+      }
+
+      newSeq.sort((a, b) => a.beat - b.beat);
+      score.sequence = newSeq;
+
+      const styleLabel = axis.d1ExitStyle === 'echo_melt' ? 'Echo溶かし' : (axis.d1ExitStyle === 'hpf_float' ? 'HPF浮かせ' : 'MID共存フェード');
+      const summary = `【いつ】D2イン B${p2Beat} → Swap B${swapBeat} → D1フェード完了 B${d1FadeEnd} (計${d1FadeEnd - p2Beat}拍共存) / 【どの程度】D2初期Fader=${Math.round(d2Presence*100)}%・MID=${score.initial_state.deck2.mid}・LOW入替=${swapDur}拍・引き方=${styleLabel}`;
+      return { score, summary };
+    }
+
+    function ensureAbstractBaseScore() {
+      if (abstractBaseScore) return abstractBaseScore;
+      try {
+        abstractBaseScore = JSON.parse(document.getElementById('score-json').value);
+        return abstractBaseScore;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function renderAbstractDirectorState(score, summaryText) {
+      const logEl = document.getElementById('abstract-materialized-log');
+      const badgeEl = document.getElementById('abstract-score-badge');
+      document.querySelectorAll('#abstract-director-panel .axis-btn').forEach(btn => {
+        const ax = btn.getAttribute('data-axis');
+        const val = btn.getAttribute('data-val');
+        const active = String(twoAxisState[ax]) === String(val);
+        btn.classList.toggle('bg-indigo-600', active);
+        btn.classList.toggle('border-indigo-400', active);
+        btn.classList.toggle('text-white', active);
+        btn.classList.toggle('font-bold', active);
+        btn.classList.toggle('bg-slate-800', !active);
+        btn.classList.toggle('text-slate-300', !active);
+      });
+      if (logEl) {
+        logEl.innerText = summaryText || 'Drop前後の共存時間（いつ）と、Fader/MID/余韻の深さ（どの程度）を分けて調整できます。';
+      }
+      if (badgeEl && score && deckAnalysis[1] && deckAnalysis[2]) {
+        const a1 = deckAnalysis[1], a2 = deckAnalysis[2];
+        const seq = score.sequence || [];
+        const p1 = seq.find(c => c.deck === 1 && c.target === 'PLAY');
+        const p2 = seq.find(c => c.deck === 2 && c.target === 'PLAY');
+        const outSec = p1 ? Number(p1.offset_sec || 0) : a1.recommendedOutSec;
+        const inSec = p2 ? Number(p2.offset_sec || 0) : a2.recommendedInSec;
+        const cand = (activeCandidateIndex >= 0 && transitionCandidates[activeCandidateIndex]) || null;
+        const res = scoreTransitionFit(
+          score, a1, a2,
+          { sec: outSec, barNum: Math.round((outSec - a1.firstDownbeat) / a1.barSec) + 1, type: cand ? cand.exitType : 'GROOVE' },
+          { sec: inSec, barNum: Math.round((inSec - a2.firstDownbeat) / a2.barSec) + 1, type: cand ? cand.entryType : 'INTRO', label: cand ? cand.d2Info : '' },
+          { id: cand ? cand.methodId : 'house_32bar_classic_a' }
+        );
+        badgeEl.innerText = `${res.fitScore}点`;
+        renderBeautyChecklist(score, { fitMeta: res.meta });
+      } else if (badgeEl) {
+        badgeEl.innerText = '--点';
+      }
+    }
+
+    function materializeAbstractDirectives() {
+      const base = ensureAbstractBaseScore();
+      if (!base) return alert('先にプランを選択するか生成してください。');
+      const { score, summary } = materializeTwoAxisPlan(base, twoAxisState);
+      document.getElementById('score-json').value = JSON.stringify(score, null, 2);
+      renderStandbySetup(score.initial_state);
+      renderSequenceTable(score.sequence, score.bpm);
+      renderFxSetupSummary(score);
+      renderAbstractDirectorState(score, summary);
+      const puzzlePanel = document.getElementById('puzzle-editor-panel');
+      if (puzzlePanel && !puzzlePanel.classList.contains('hidden')) {
+        loadCurrentScoreToPuzzle();
+      }
+    }
+
+    function setTwoAxisParam(key, val) {
+      if (!ensureAbstractBaseScore()) return alert('先にプランを選択するか生成してください。');
+      twoAxisState[key] = val;
+      materializeAbstractDirectives();
+    }
+
+    function submitAbstractPrompt() {
+      const input = document.getElementById('abstract-prompt-input');
+      if (!input) return;
+      const patch = parseTwoAxisPrompt(input.value);
+      if (!patch) {
+        return alert('解釈できるキーワードが見つかりませんでした（例: 16小節前から / 8小節残す / 堂々100% / Echo溶かし / 滑らか8拍）。');
+      }
+      if (!ensureAbstractBaseScore()) return alert('先にプランを選択するか生成してください。');
+      Object.assign(twoAxisState, patch);
+      input.value = '';
+      materializeAbstractDirectives();
+    }
+
+    function resetAbstractDirectives() {
+      twoAxisState = { ...DEFAULT_TWO_AXIS_STATE };
+      const base = ensureAbstractBaseScore();
+      if (!base) return;
+      document.getElementById('score-json').value = JSON.stringify(base, null, 2);
+      renderStandbySetup(base.initial_state);
+      renderSequenceTable(base.sequence, base.bpm);
+      renderFxSetupSummary(base);
+      renderAbstractDirectorState(base, '元のプランにリセットしました。');
+      const puzzlePanel = document.getElementById('puzzle-editor-panel');
+      if (puzzlePanel && !puzzlePanel.classList.contains('hidden')) {
+        loadCurrentScoreToPuzzle();
+      }
+    }
+
+    function playAbstractPreview() {
+      stopPreview();
+      if (isPlaying) stopPerformance();
+      const cand = (activeCandidateIndex >= 0 && transitionCandidates[activeCandidateIndex]) || null;
+      const useFocus = document.getElementById('focus-mixpoint-toggle')?.checked;
+      const startBeat = (useFocus && cand && cand.focusBeat) ? cand.focusBeat : 1.0;
+      const startBeatInput = document.getElementById('start-beat-input');
+      if (startBeatInput) startBeatInput.value = startBeat;
+      setTimeout(() => startPerformance(startBeat), 80);
+    }
+
+    // --- DAW Multitrack Timeline Editor (What / When / How Long / How Much) ---
+    let puzzleScoreData = null;
+    let dawSelectedClipIdx = -1;
+    let dawDragState = null;
+
+    function togglePuzzleEditor() {
+      const panel = document.getElementById('puzzle-editor-panel');
+      const btn = document.getElementById('puzzle-toggle-btn');
+      if (!panel) return;
+      const willOpen = panel.classList.contains('hidden');
+      panel.classList.toggle('hidden');
+      if (btn) {
+        btn.classList.toggle('bg-fuchsia-600', willOpen);
+        btn.classList.toggle('text-white', willOpen);
+      }
+      if (willOpen) {
+        loadCurrentScoreToPuzzle();
+      }
+    }
+
+    function loadCurrentScoreToPuzzle() {
+      try {
+        puzzleScoreData = JSON.parse(document.getElementById('score-json').value);
+      } catch (e) {
+        return alert('現在の楽譜JSONを読み取れません。先に候補を選択するか生成してください。');
+      }
+      dawSelectedClipIdx = (puzzleScoreData.sequence && puzzleScoreData.sequence.length > 1) ? 1 : 0;
+      renderPuzzleEditor();
+      evaluatePuzzleLive();
+    }
+
+    function evaluatePuzzleLive() {
+      if (!puzzleScoreData) return;
+      const a1 = deckAnalysis[1];
+      const a2 = deckAnalysis[2];
+      const scoreEl = document.getElementById('puzzle-live-score');
+      const reasonEl = document.getElementById('puzzle-live-reason');
+      if (!a1 || !a2) {
+        if (scoreEl) scoreEl.innerText = '--点';
+        if (reasonEl) reasonEl.innerText = 'リアルタイム評価: 両デッキに曲を読み込むと自動採点します';
+        return;
+      }
+      const seq = puzzleScoreData.sequence || [];
+      const play1 = seq.find(c => c.deck === 1 && c.target === 'PLAY');
+      const play2 = seq.find(c => c.deck === 2 && c.target === 'PLAY');
+      const outSec = play1 ? Number(play1.offset_sec || 0) : a1.recommendedOutSec;
+      const inSec = play2 ? Number(play2.offset_sec || 0) : a2.recommendedInSec;
+      const bar1 = Math.round((outSec - a1.firstDownbeat) / a1.barSec) + 1;
+      const bar2 = Math.round((inSec - a2.firstDownbeat) / a2.barSec) + 1;
+      const cand = (activeCandidateIndex >= 0 && transitionCandidates[activeCandidateIndex]) || null;
+      const exitObj = { sec: outSec, barNum: bar1, type: cand ? cand.exitType : 'GROOVE' };
+      const entryObj = { sec: inSec, barNum: bar2, type: cand ? cand.entryType : 'INTRO', label: cand ? cand.d2Info : '' };
+      const methodObj = { id: cand ? cand.methodId : 'house_32bar_classic_a' };
+      const res = scoreTransitionFit(puzzleScoreData, a1, a2, exitObj, entryObj, methodObj);
+      if (scoreEl) scoreEl.innerText = `${res.fitScore}点`;
+      if (reasonEl) reasonEl.innerText = `リアルタイム評価: ${res.reason}`;
+      renderBeautyChecklist(puzzleScoreData, { fitMeta: res.meta });
+    }
+
+    function syncPuzzleToSystem() {
+      if (!puzzleScoreData) return;
+      const selectedClipRef = (dawSelectedClipIdx >= 0 && puzzleScoreData.sequence[dawSelectedClipIdx]) || null;
+      puzzleScoreData.sequence.sort((a, b) => a.beat - b.beat);
+      if (selectedClipRef) dawSelectedClipIdx = puzzleScoreData.sequence.indexOf(selectedClipRef);
+      document.getElementById('score-json').value = JSON.stringify(puzzleScoreData, null, 2);
+      renderStandbySetup(puzzleScoreData.initial_state);
+      renderSequenceTable(puzzleScoreData.sequence, puzzleScoreData.bpm);
+      renderFxSetupSummary(puzzleScoreData);
+      evaluatePuzzleLive();
+      renderPuzzleEditor();
+    }
+
+    function shiftPuzzleTrackOffset(deckNum, deltaBars) {
+      if (!puzzleScoreData) loadCurrentScoreToPuzzle();
+      if (!puzzleScoreData) return;
+      const a = deckAnalysis[deckNum];
+      const barSec = a ? a.barSec : (240 / (puzzleScoreData.bpm || 128));
+      const maxDur = a ? Math.max(barSec, a.duration - 16) : 300;
+      const minSec = a ? a.firstDownbeat : 0;
+      const playCmd = (puzzleScoreData.sequence || []).find(c => c.deck === deckNum && c.target === 'PLAY');
+      if (!playCmd) return;
+      const nextSec = Math.max(minSec, Math.min(maxDur, Number(playCmd.offset_sec || 0) + deltaBars * barSec));
+      playCmd.offset_sec = Number(nextSec.toFixed(3));
+      if (a) {
+        if (deckNum === 1) {
+          a.recommendedOutSec = playCmd.offset_sec;
+          renderStoryMap(1);
+          if (deck1Buffer) drawWaveform('d1-wave-canvas', deck1Buffer, 'rgba(56, 189, 248, 0.75)', a, 1);
+        } else {
+          a.recommendedInSec = playCmd.offset_sec;
+          renderStoryMap(2);
+          if (deck2Buffer) drawWaveform('d2-wave-canvas', deck2Buffer, 'rgba(244, 63, 94, 0.75)', a, 2);
+        }
+        updateAutoMixSummary();
+      }
+      syncPuzzleToSystem();
+    }
+
+    const DAW_LANES = [
+      { deck: 1, target: 'FADER', label: 'D1 Fader', color: 'bg-sky-600/80 border-sky-400', barColor: 'bg-sky-300/35' },
+      { deck: 1, target: 'EQ_LOW', label: 'D1 LOW', color: 'bg-cyan-700/80 border-cyan-400', barColor: 'bg-cyan-300/35' },
+      { deck: 1, target: 'EQ_MID', label: 'D1 MID', color: 'bg-blue-700/80 border-blue-400', barColor: 'bg-blue-300/35' },
+      { deck: 1, target: 'EQ_HIGH', label: 'D1 HIGH', color: 'bg-indigo-700/80 border-indigo-400', barColor: 'bg-indigo-300/35' },
+      { deck: 1, target: 'FILTER', label: 'D1 Filter', color: 'bg-purple-700/80 border-purple-400', barColor: 'bg-purple-300/35' },
+      { deck: 1, target: 'BEAT_FX', label: 'D1 Echo/FX', color: 'bg-emerald-700/80 border-emerald-400', barColor: 'bg-emerald-300/35' },
+      { deck: 1, target: 'LOOP', label: 'D1 Loop', color: 'bg-violet-700/80 border-violet-400', barColor: 'bg-violet-300/35' },
+      { deck: 2, target: 'PLAY', label: 'D2 Cue/Start', color: 'bg-rose-700/90 border-rose-400', barColor: 'bg-rose-300/35' },
+      { deck: 2, target: 'FADER', label: 'D2 Fader', color: 'bg-rose-600/80 border-rose-400', barColor: 'bg-rose-300/35' },
+      { deck: 2, target: 'EQ_LOW', label: 'D2 LOW', color: 'bg-amber-700/80 border-amber-400', barColor: 'bg-amber-300/35' },
+      { deck: 2, target: 'EQ_MID', label: 'D2 MID', color: 'bg-pink-700/80 border-pink-400', barColor: 'bg-pink-300/35' },
+      { deck: 2, target: 'EQ_HIGH', label: 'D2 HIGH', color: 'bg-fuchsia-700/80 border-fuchsia-400', barColor: 'bg-fuchsia-300/35' },
+      { deck: 2, target: 'FILTER', label: 'D2 Filter', color: 'bg-purple-700/80 border-purple-400', barColor: 'bg-purple-300/35' }
+    ];
+
+    function renderPuzzleEditor() {
+      if (!puzzleScoreData) return;
+      const seq = puzzleScoreData.sequence || [];
+      const play1 = seq.find(c => c.deck === 1 && c.target === 'PLAY');
+      const play2 = seq.find(c => c.deck === 2 && c.target === 'PLAY');
+      const a1 = deckAnalysis[1];
+      const a2 = deckAnalysis[2];
+      const d1PosEl = document.getElementById('puzzle-d1-pos');
+      const d2PosEl = document.getElementById('puzzle-d2-pos');
+      if (d1PosEl && play1) {
+        const b1 = a1 ? Math.round((play1.offset_sec - a1.firstDownbeat) / a1.barSec) + 1 : '-';
+        d1PosEl.innerText = `Bar${b1} (${formatTimeMinSec(play1.offset_sec)})`;
+      }
+      if (d2PosEl && play2) {
+        const b2 = a2 ? Math.round((play2.offset_sec - a2.firstDownbeat) / a2.barSec) + 1 : '-';
+        d2PosEl.innerText = `Bar${b2} (${formatTimeMinSec(play2.offset_sec)})`;
+      }
+
+      const maxBeat = Math.max(80, ...seq.map(c => c.beat + (c.duration_beats || 0))) + 16;
+      const totalBars = Math.ceil(maxBeat / 4);
+      const pxPerBeat = 11;
+      window.dawPxPerBeat = pxPerBeat;
+      const timelineWidth = totalBars * 4 * pxPerBeat;
+      const grid = document.getElementById('puzzle-timeline-grid');
+      if (!grid) return;
+
+      // Left fixed lane labels
+      const leftCol = `
+        <div class="shrink-0 w-[112px] bg-[#0b101d] border-r border-[#252f45] z-10 sticky left-0">
+          <div class="h-6 border-b border-[#252f45] px-2 flex items-center text-[10px] font-bold text-slate-400">トラック(何を)</div>
+          ${DAW_LANES.map(l => `
+            <div class="h-7 border-b border-[#172033] px-2 flex items-center text-[10px] font-mono-num font-bold ${l.deck === 1 ? 'text-sky-300' : 'text-rose-300'} ${l.deck === 2 && l.target === 'PLAY' ? 'border-t border-t-slate-600' : ''}">
+              ${l.label}
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+      // Ruler ticks (every 4 beats = 1 bar)
+      let rulerHtml = '';
+      for (let bar = 1; bar <= totalBars; bar++) {
+        const left = (bar - 1) * 4 * pxPerBeat;
+        const isMajor = (bar - 1) % 4 === 0;
+        rulerHtml += `<div style="left:${left}px;width:${4 * pxPerBeat}px" class="absolute top-0 bottom-0 border-l ${isMajor ? 'border-slate-500 text-slate-200 font-bold' : 'border-[#1d2436] text-slate-500'} pl-1 text-[9px] font-mono-num flex items-center">Bar${bar}${isMajor ? `(B${1 + (bar - 1) * 4})` : ''}</div>`;
+      }
+
+      // Lanes
+      const lanesHtml = DAW_LANES.map((lane, laneIdx) => {
+        const clips = seq
+          .map((c, idx) => ({ c, idx }))
+          .filter(({ c }) => c.deck === lane.deck && c.target === lane.target);
+
+        const clipsHtml = clips.map(({ c, idx }) => {
+          const left = Math.max(0, (c.beat - 1) * pxPerBeat);
+          const dur = Math.max(2, c.duration_beats || (c.target === 'PLAY' ? 4 : 2));
+          const width = Math.max(24, dur * pxPerBeat);
+          const isSel = idx === dawSelectedClipIdx;
+          let levelPct = 100;
+          let label = '';
+          if (c.target === 'PLAY') {
+            label = `▶ IN`;
+          } else if (c.target === 'BEAT_FX') {
+            const isOff = String(c.value).toUpperCase() === 'OFF' || c.value === 0;
+            levelPct = isOff ? 10 : (typeof c.value === 'number' ? Math.round(c.value * 100) : 82);
+            label = isOff ? 'OFF' : `Echo ${levelPct}%`;
+          } else if (c.target === 'LOOP') {
+            levelPct = Number(c.value) > 0 ? 85 : 15;
+            label = Number(c.value) > 0 ? `${c.value}拍` : '解除';
+          } else if (c.target === 'FILTER') {
+            const v = Number(c.value || 0);
+            levelPct = Math.round(Math.min(100, Math.abs(v) * 120));
+            label = v > 0.02 ? `HPF+${v.toFixed(2)}` : (v < -0.02 ? `LPF${v.toFixed(2)}` : 'FLAT');
+          } else {
+            const v = Number(c.value ?? 1);
+            levelPct = Math.round(Math.max(8, Math.min(100, v * 100)));
+            label = `${Math.round(v * 100)}%`;
+          }
+          const selRing = isSel ? 'ring-2 ring-white shadow-lg z-20' : 'opacity-90 hover:opacity-100';
+          return `
+            <div onmousedown="startDawDrag(event, ${idx}, 'move', ${pxPerBeat})"
+                 onclick="event.stopPropagation(); selectDawClip(${idx})"
+                 style="left:${left}px;width:${width}px"
+                 title="Beat ${c.beat} / ${dur}拍 / ${label}"
+                 class="absolute top-0.5 bottom-0.5 rounded border ${lane.color} ${selRing} cursor-grab active:cursor-grabbing overflow-hidden flex items-center px-1 text-[9px] font-mono-num text-white font-bold">
+              <div style="height:${levelPct}%" class="absolute left-0 right-0 bottom-0 ${lane.barColor} pointer-events-none"></div>
+              <span class="relative z-10 truncate pointer-events-none">${label}</span>
+              ${c.target !== 'PLAY' && c.target !== 'LOOP' ? `<div onmousedown="event.stopPropagation(); startDawDrag(event, ${idx}, 'resize', ${pxPerBeat})" class="absolute right-0 top-0 bottom-0 w-1.5 cursor-ew-resize bg-white/30 hover:bg-white/70 z-20" title="ドラッグで長さ調整"></div>` : ''}
+            </div>
+          `;
+        }).join('');
+
+        // Background bar grid lines
+        let bgLines = '';
+        for (let bar = 1; bar <= totalBars; bar += 4) {
+          bgLines += `<div style="left:${(bar - 1) * 4 * pxPerBeat}px" class="absolute top-0 bottom-0 border-l border-[#1e293b] pointer-events-none"></div>`;
+        }
+
+        return `
+          <div onclick="addDawClipAtClick(event, ${laneIdx}, ${pxPerBeat})"
+               class="relative h-7 border-b border-[#172033] ${lane.deck === 2 && lane.target === 'PLAY' ? 'border-t border-t-slate-600' : ''} hover:bg-white/[0.03] cursor-crosshair">
+            ${bgLines}
+            ${clipsHtml}
+          </div>
+        `;
+      }).join('');
+
+      grid.innerHTML = `
+        ${leftCol}
+        <div class="relative shrink-0" style="width:${timelineWidth}px">
+          <div onclick="seekDawPlayhead(event, ${pxPerBeat})" title="クリックした位置から再生" class="relative h-6 border-b border-[#252f45] bg-[#0b101d] cursor-pointer hover:bg-[#131b2e] transition-colors">${rulerHtml}</div>
+          ${lanesHtml}
+          <div id="daw-playhead-line" class="hidden absolute top-0 bottom-0 w-[2px] bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)] pointer-events-none z-30" style="left:0px;">
+            <div class="w-2.5 h-2.5 -ml-[4px] bg-amber-400 rotate-45 -mt-0.5 rounded-[1px]"></div>
+          </div>
+        </div>
+      `;
+
+      renderDawInspector();
+    }
+
+    function renderDawInspector() {
+      const wrap = document.getElementById('daw-inspector-controls');
+      const lbl = document.getElementById('puzzle-selected-label');
+      if (!puzzleScoreData || dawSelectedClipIdx < 0 || !puzzleScoreData.sequence[dawSelectedClipIdx]) {
+        if (wrap) wrap.classList.add('hidden');
+        if (lbl) lbl.innerText = 'クリップをクリックして「いつ・どれだけ・どの程度」を編集（空きレーンクリックで追加）';
+        return;
+      }
+      const c = puzzleScoreData.sequence[dawSelectedClipIdx];
+      if (wrap) wrap.classList.remove('hidden');
+      const bar = Math.floor((c.beat - 1) / 4) + 1;
+      if (lbl) lbl.innerText = `選択中: D${c.deck} ${c.target} (Bar ${bar} / Beat ${c.beat})`;
+      const beatEl = document.getElementById('daw-insp-beat');
+      const durEl = document.getElementById('daw-insp-dur');
+      const durWrap = document.getElementById('daw-insp-dur-wrap');
+      const valWrap = document.getElementById('daw-insp-val-wrap');
+      const slider = document.getElementById('daw-insp-val-slider');
+      const valText = document.getElementById('daw-insp-val-text');
+      if (beatEl) beatEl.innerText = `B${c.beat}`;
+      if (durEl) durEl.innerText = `${c.duration_beats || 0}b`;
+      if (durWrap) durWrap.classList.toggle('hidden', c.target === 'PLAY' || c.target === 'LOOP');
+      if (valWrap) valWrap.classList.toggle('hidden', c.target === 'PLAY');
+      if (slider && valText && c.target !== 'PLAY') {
+        if (c.target === 'FILTER') {
+          slider.min = -0.8; slider.max = 0.8; slider.step = 0.05;
+          slider.value = Number(c.value || 0);
+        } else if (c.target === 'LOOP') {
+          slider.min = 0; slider.max = 16; slider.step = 2;
+          slider.value = Number(c.value || 0);
+        } else {
+          slider.min = 0; slider.max = 1; slider.step = 0.05;
+          const numV = c.value === 'OFF' ? 0 : (typeof c.value === 'number' ? c.value : 0.85);
+          slider.value = numV;
+        }
+        valText.innerText = formatControlSpec(c.target, c.value, puzzleScoreData.bpm || 128);
+      }
+    }
+
+    function selectDawClip(idx) {
+      dawSelectedClipIdx = idx;
+      renderPuzzleEditor();
+    }
+
+    function startDawDrag(ev, idx, mode, pxPerBeat) {
+      if (ev.button !== 0 || !puzzleScoreData) return;
+      dawSelectedClipIdx = idx;
+      const c = puzzleScoreData.sequence[idx];
+      dawDragState = {
+        idx,
+        mode,
+        pxPerBeat,
+        startX: ev.clientX,
+        origBeat: c.beat,
+        origDur: c.duration_beats || 4
+      };
+      const onMove = (e) => {
+        if (!dawDragState) return;
+        const dx = e.clientX - dawDragState.startX;
+        const snap4 = document.getElementById('daw-snap4-toggle')?.checked;
+        const step = snap4 ? 4 : 1;
+        const dBeats = Math.round((dx / dawDragState.pxPerBeat) / step) * step;
+        const clip = puzzleScoreData.sequence[dawDragState.idx];
+        if (!clip) return;
+        if (dawDragState.mode === 'move') {
+          clip.beat = Math.max(1.0, dawDragState.origBeat + dBeats);
+        } else if (dawDragState.mode === 'resize') {
+          clip.duration_beats = Math.max(1, dawDragState.origDur + dBeats);
+        }
+        renderPuzzleEditor();
+      };
+      const onUp = () => {
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+        if (dawDragState) {
+          dawDragState = null;
+          syncPuzzleToSystem();
+        }
+      };
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    }
+
+    function addDawClipAtClick(ev, laneIdx, pxPerBeat) {
+      if (!puzzleScoreData) return;
+      const rect = ev.currentTarget.getBoundingClientRect();
+      const x = Math.max(0, ev.clientX - rect.left);
+      const snap4 = document.getElementById('daw-snap4-toggle')?.checked;
+      const step = snap4 ? 4 : 1;
+      const rawBeat = 1 + Math.floor((x / pxPerBeat) / step) * step;
+      const lane = DAW_LANES[laneIdx];
+      if (!lane || lane.target === 'PLAY') return;
+      const newClip = lane.target === 'LOOP'
+        ? { beat: rawBeat, deck: lane.deck, target: 'LOOP', value: 4, action: 'cut' }
+        : {
+            beat: rawBeat,
+            deck: lane.deck,
+            target: lane.target,
+            value: lane.target === 'FILTER' ? 0.0 : (lane.target === 'BEAT_FX' ? 0.78 : 0.8),
+            action: 'ramp',
+            duration_beats: 8
+          };
+      puzzleScoreData.sequence.push(newClip);
+      dawSelectedClipIdx = puzzleScoreData.sequence.length - 1;
+      syncPuzzleToSystem();
+    }
+
+    function nudgeSelectedClip(prop, delta) {
+      if (!puzzleScoreData || dawSelectedClipIdx < 0) return;
+      const c = puzzleScoreData.sequence[dawSelectedClipIdx];
+      if (!c) return;
+      if (prop === 'beat') c.beat = Math.max(1.0, c.beat + delta);
+      if (prop === 'dur') c.duration_beats = Math.max(1, (c.duration_beats || 4) + delta);
+      syncPuzzleToSystem();
+    }
+
+    function setSelectedClipValue(rawVal) {
+      if (!puzzleScoreData || dawSelectedClipIdx < 0) return;
+      const c = puzzleScoreData.sequence[dawSelectedClipIdx];
+      if (!c || c.target === 'PLAY') return;
+      const num = Number(rawVal);
+      if (c.target === 'BEAT_FX' && num <= 0.01) c.value = 'OFF';
+      else c.value = Number(num.toFixed(2));
+      syncPuzzleToSystem();
+    }
+
+    function deleteSelectedClip() {
+      if (!puzzleScoreData || dawSelectedClipIdx < 0) return;
+      const c = puzzleScoreData.sequence[dawSelectedClipIdx];
+      if (!c || c.target === 'PLAY') return alert('PLAY(再生開始)コマンド自体は削除できません。位置を移動してください。');
+      puzzleScoreData.sequence.splice(dawSelectedClipIdx, 1);
+      dawSelectedClipIdx = -1;
+      syncPuzzleToSystem();
+    }
+
+    function playPuzzlePreview() {
+      syncPuzzleToSystem();
+      stopPreview();
+      if (isPlaying) stopPerformance();
+      const useFocus = document.getElementById('focus-mixpoint-toggle')?.checked;
+      const play2 = puzzleScoreData && (puzzleScoreData.sequence || []).find(c => c.deck === 2 && c.target === 'PLAY');
+      const startBeat = useFocus && play2 ? Math.max(1.0, play2.beat) : 1.0;
+      const startBeatInput = document.getElementById('start-beat-input');
+      if (startBeatInput) startBeatInput.value = startBeat;
+      setTimeout(() => startPerformance(startBeat), 80);
+    }
+
+    function updateDawPlayhead(currentBeat) {
+      const line = document.getElementById('daw-playhead-line');
+      const posBadge = document.getElementById('daw-live-playhead-pos');
+      const pxPerBeat = window.dawPxPerBeat || 11;
+      const bar = Math.floor((currentBeat - 1) / 4) + 1;
+      const beatInBar = Math.floor((currentBeat - 1) % 4) + 1;
+
+      if (posBadge) {
+        posBadge.innerText = `▶ Bar ${bar}.${beatInBar} (B${currentBeat.toFixed(1)})`;
+        posBadge.className = 'px-2 py-0.5 rounded bg-amber-500/20 border border-amber-400/60 text-amber-300 font-bold font-mono-num text-[11px]';
+      }
+      if (!line) return;
+
+      const x = Math.max(0, (currentBeat - 1) * pxPerBeat);
+      line.style.left = `${x}px`;
+      line.classList.remove('hidden');
+
+      const panel = document.getElementById('puzzle-editor-panel');
+      const grid = document.getElementById('puzzle-timeline-grid');
+      if (panel && !panel.classList.contains('hidden') && grid) {
+        const viewW = Math.max(200, grid.clientWidth - 112);
+        const relX = x - grid.scrollLeft;
+        if (relX > viewW * 0.85 || relX < 0) {
+          grid.scrollLeft = Math.max(0, x - viewW * 0.25);
+        }
+      }
+    }
+
+    function seekDawPlayhead(ev, pxPerBeat = 11) {
+      const rect = ev.currentTarget.getBoundingClientRect();
+      const x = Math.max(0, ev.clientX - rect.left);
+      const rawBeat = 1 + x / pxPerBeat;
+      const snap4 = document.getElementById('daw-snap4-toggle')?.checked;
+      const targetBeat = snap4
+        ? Math.max(1, Math.floor((rawBeat - 1) / 4) * 4 + 1)
+        : Math.max(1, Math.round(rawBeat));
+
+      syncPuzzleToSystem();
+      stopPreview();
+      if (isPlaying) stopPerformance();
+      const startBeatInput = document.getElementById('start-beat-input');
+      if (startBeatInput) startBeatInput.value = targetBeat;
+      updateDawPlayhead(targetBeat);
+      setTimeout(() => startPerformance(targetBeat), 60);
     }
 
     function evaluateBeautyChecklist(score, cand = null) {
@@ -2898,9 +4319,9 @@
         c3KeyOk = false;
         c3Msg = 'Key不明 (耳確認推奨)';
       } else if (keyCompat.distance >= 2) {
-        const safeMid = (midPct !== null && midPct <= 8) || (cand && cand.fitMeta && cand.fitMeta.isDrumOrShortSafe);
+        const safeMid = (midPct !== null && midPct <= 35) || (cand && cand.fitMeta && cand.fitMeta.isDrumOrShortSafe);
         c3KeyOk = Boolean(safeMid);
-        c3Msg = safeMid ? `${keyCompat.label} / MID回避OK` : `${keyCompat.label} (要MIDカット)`;
+        c3Msg = safeMid ? `${keyCompat.label} / MID共存OK` : `${keyCompat.label} (MID過密注意)`;
       }
 
       // ④ ベーススワップの明確化
@@ -3197,17 +4618,17 @@
     }
 
     // --- XML Browser API ---
-    async function loadXmlTracks() {
+    async function loadXmlTracks(silent = false) {
       const listEl = document.getElementById('xml-track-list');
-      listEl.innerHTML = '<div class="p-4 text-center text-xs text-slate-500">XML解析中...</div>';
+      if (listEl && !silent) listEl.innerHTML = '<div class="p-4 text-center text-xs text-slate-500">XML解析中...</div>';
       try {
         const res = await fetch('/api/xml-tracks');
         const data = await res.json();
         if (!data.success) throw new Error(data.error);
         xmlTracksCache = data.tracks.filter(tr => tr.bpm > 0);
-        renderXmlTrackList(xmlTracksCache);
+        if (listEl) renderXmlTrackList(xmlTracksCache);
       } catch (err) {
-        listEl.innerHTML = `<div class="p-4 text-center text-xs text-red-400">XML読込エラー: ${err.message}</div>`;
+        if (listEl && !silent) listEl.innerHTML = `<div class="p-4 text-center text-xs text-red-400">XML読込エラー: ${err.message}</div>`;
       }
     }
 
@@ -3839,6 +5260,7 @@
 
       updateDeckMeters(currentBeat);
       updateStemsUI(currentBeat);
+      updateDawPlayhead(currentBeat);
 
       // Playhead Update
       if (deck1Buffer && currentBeat >= d1PlayStartBeat) {
@@ -4014,9 +5436,18 @@
       document.getElementById('log-status').innerText = t('stopped_msg');
       document.getElementById('next-action-text').innerText = t('ready_to_play');
       document.getElementById('next-action-count').innerText = '--';
+
+      const dawLine = document.getElementById('daw-playhead-line');
+      if (dawLine) dawLine.classList.add('hidden');
+      const dawPos = document.getElementById('daw-live-playhead-pos');
+      if (dawPos) {
+        dawPos.innerText = '■ 停止中';
+        dawPos.className = 'px-2 py-0.5 rounded bg-slate-800 border border-slate-600/60 text-slate-400 font-bold font-mono-num text-[11px]';
+      }
     }
 
     applyLanguage();
+    loadXmlTracks(true);
   </script>
 </body>
 </html>
